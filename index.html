@@ -16,37 +16,37 @@
   --green:#4CAF50; --red:#E53935; --amber:#FF8F00; --blue:#4FC3F7;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--dark);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;line-height:1.5;}
+body{background:var(--dark);color:var(--text);font-family:IBM Plex Sans,sans-serif;font-size:13px;line-height:1.5;}
 
 /* LOADING */
 #loading-screen{position:fixed;inset:0;background:var(--dark);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;}
-.loading-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;color:var(--text);}
+.loading-logo{font-family:Bebas Neue,sans-serif;font-size:32px;letter-spacing:4px;color:var(--text);}
 .loading-logo span{color:var(--brass);}
 .loading-bar-track{width:320px;height:3px;background:var(--dark-4);}
 .loading-bar-fill{height:100%;background:var(--brass);transition:width 0.3s ease;width:0%;}
-.loading-status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);}
-.loading-files{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;line-height:2;}
+.loading-status{font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--text-dim);}
+.loading-files{font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);text-align:center;line-height:2;}
 #error-screen{position:fixed;inset:0;background:var(--dark);z-index:9998;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px;}
-.error-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red);letter-spacing:2px;}
-.error-msg{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);text-align:center;max-width:500px;line-height:2;}
-.error-files{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);max-width:500px;line-height:2;}
+.error-title{font-family:Bebas Neue,sans-serif;font-size:28px;color:var(--red);letter-spacing:2px;}
+.error-msg{font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--text-muted);text-align:center;max-width:500px;line-height:2;}
+.error-files{font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);max-width:500px;line-height:2;}
 
 /* HEADER */
 header{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
 .logo{display:flex;align-items:center;gap:16px;}
 .logo-icon{width:36px;height:36px;background:var(--brass);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);}
-.logo h1{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;}
+.logo h1{font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:3px;}
 .logo h1 span{color:var(--brass);}
-.header-meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);text-align:right;line-height:1.8;}
+.header-meta{font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--text-muted);text-align:right;line-height:1.8;}
 .header-meta strong{color:var(--brass);}
 .header-right{display:flex;align-items:center;gap:16px;}
-.live-badge{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--green);background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);padding:4px 10px;}
+.live-badge{display:flex;align-items:center;gap:6px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--green);background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);padding:4px 10px;}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
 /* TABS */
 .tabs{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 32px;display:flex;}
-.tab{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:14px 20px;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;transition:all 0.2s;}
+.tab{font-family:IBM Plex Mono,monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:14px 20px;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;transition:all 0.2s;}
 .tab:hover{color:var(--text);}
 .tab.active{color:var(--brass);border-bottom-color:var(--brass);}
 .tab-content{display:none;}
@@ -54,7 +54,7 @@ header{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 
 
 /* LAYOUT */
 .page{padding:28px 32px;max-width:1600px;margin:0 auto;}
-.section-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.section-label{font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
 .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
 
 /* KPI */
@@ -64,10 +64,10 @@ header{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 
 .kpi-card.green::before{background:var(--green);}
 .kpi-card.blue::before{background:var(--blue);}
 .kpi-card.amber::before{background:var(--amber);}
-.kpi-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
-.kpi-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--text);line-height:1;margin-bottom:8px;}
-.kpi-sub{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;}
-.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.kpi-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
+.kpi-value{font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:1px;color:var(--text);line-height:1;margin-bottom:8px;}
+.kpi-sub{display:flex;align-items:center;gap:6px;font-family:IBM Plex Mono,monospace;font-size:10px;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;font-size:10px;font-family:IBM Plex Mono,monospace;font-weight:600;}
 .badge.up{background:rgba(76,175,80,0.15);color:var(--green);}
 .badge.down{background:rgba(229,57,53,0.15);color:var(--red);}
 .badge.neutral{background:rgba(184,134,11,0.15);color:var(--brass);}
@@ -78,62 +78,62 @@ header{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 
 .yoy-col{padding:0 24px;border-right:1px solid var(--border);}
 .yoy-col:first-child{padding-left:0;}
 .yoy-col:last-child{border-right:none;}
-.yoy-period{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
-.yoy-amount{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;line-height:1;margin-bottom:4px;}
+.yoy-period{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
+.yoy-amount{font-family:Bebas Neue,sans-serif;font-size:36px;letter-spacing:1px;line-height:1;margin-bottom:4px;}
 .yoy-amount.y1{color:var(--text-muted);}
 .yoy-amount.y2{color:var(--brass-light);}
 .yoy-amount.growth{color:var(--green);}
-.yoy-sub{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);}
+.yoy-sub{font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);}
 
 /* CHARTS */
 .chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;}
 .chart-grid-3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:28px;}
 .chart-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:28px;}
 .chart-box{background:var(--dark-2);border:1px solid var(--border);padding:20px;}
-.chart-title{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}
+.chart-title{font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}
 .chart-subtitle{font-size:11px;color:var(--text-dim);margin-bottom:16px;}
 .chart-container{position:relative;width:100%;}
 .chart-row-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
-.chart-stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--brass-light);line-height:1;}
-.chart-stat-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dim);}
+.chart-stat-val{font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--brass-light);line-height:1;}
+.chart-stat-label{font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--text-dim);}
 .legend{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;}
-.legend-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);}
+.legend-item{display:flex;align-items:center;gap:6px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);}
 .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 
 /* TABLES */
 .data-table{width:100%;border-collapse:collapse;}
-.data-table th{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table th{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
 .data-table td{padding:9px 12px;font-size:12px;border-bottom:1px solid rgba(46,46,46,0.5);}
 .data-table tr:last-child td{border-bottom:none;}
 .data-table tr:hover td{background:rgba(184,134,11,0.04);}
-.data-table .num{font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:right;}
+.data-table .num{font-family:IBM Plex Mono,monospace;font-size:11px;text-align:right;}
 
 /* STAT PAIRS */
 .stat-pair{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
 .stat-pair:last-child{border-bottom:none;}
 .stat-pair-label{font-size:12px;color:var(--text-muted);}
-.stat-pair-val{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--text);}
+.stat-pair-val{font-family:IBM Plex Mono,monospace;font-size:12px;font-weight:600;color:var(--text);}
 
 /* HEAT GRID */
 .heat-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px;}
 .heat-cell{background:var(--dark-4);padding:12px 8px;text-align:center;transition:transform 0.15s;cursor:default;}
 .heat-cell:hover{transform:scale(1.03);}
-.heat-cell .day-name{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
-.heat-cell .day-sales{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;line-height:1;margin-bottom:4px;}
-.heat-cell .day-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dim);}
+.heat-cell .day-name{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
+.heat-cell .day-sales{font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:1px;line-height:1;margin-bottom:4px;}
+.heat-cell .day-sub{font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--text-dim);}
 
 /* PROGRESS */
 .progress-row{margin-bottom:12px;}
 .progress-header{display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;}
 .progress-name{color:var(--text-muted);}
-.progress-val{font-family:'IBM Plex Mono',monospace;color:var(--text);font-size:11px;}
+.progress-val{font-family:IBM Plex Mono,monospace;color:var(--text);font-size:11px;}
 .progress-track{height:6px;background:var(--dark-4);overflow:hidden;}
 .progress-fill{height:100%;transition:width 1s ease;}
 
 /* METRIC BOXES */
 .metric-box{background:var(--dark-3);border:1px solid var(--border);padding:16px;text-align:center;}
-.metric-box-val{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;line-height:1;color:var(--brass-light);}
-.metric-box-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-top:6px;}
+.metric-box-val{font-family:Bebas Neue,sans-serif;font-size:32px;letter-spacing:1px;line-height:1;color:var(--brass-light);}
+.metric-box-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-top:6px;}
 
 
 
@@ -141,32 +141,32 @@ header{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 
 .pricing-target-bar{background:var(--dark-3);border:1px solid var(--border);border-left:3px solid var(--brass);padding:16px 24px;margin-bottom:20px;display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
 .pricing-target-bar input[type=range]{-webkit-appearance:none;width:180px;height:4px;background:var(--dark-4);outline:none;border-radius:2px;}
 .pricing-target-bar input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--brass);border-radius:50%;cursor:pointer;}
-.pricing-target-val{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--brass-light);line-height:1;}
-.pricing-target-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;}
+.pricing-target-val{font-family:Bebas Neue,sans-serif;font-size:32px;color:var(--brass-light);line-height:1;}
+.pricing-target-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;}
 .p-cat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
 .p-cat-card{background:var(--dark-2);border:1px solid var(--border);padding:16px;position:relative;}
-.p-cat-pct{font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1;margin-bottom:4px;}
-.p-cat-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
+.p-cat-pct{font-family:Bebas Neue,sans-serif;font-size:34px;line-height:1;margin-bottom:4px;}
+.p-cat-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
 .p-cat-track{height:5px;background:var(--dark-4);margin-bottom:8px;}
 .p-cat-fill{height:100%;transition:width 0.5s;}
-.p-cat-foot{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dim);}
+.p-cat-foot{display:flex;justify-content:space-between;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--text-dim);}
 .p-pills{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto;}
 .p-pill{background:var(--dark-4);border:1px solid var(--border);padding:8px 14px;}
-.p-pill-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:3px;}
-.p-pill-val{font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1;}
+.p-pill-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:3px;}
+.p-pill-val{font-family:Bebas Neue,sans-serif;font-size:20px;line-height:1;}
 .p-tabs{display:flex;gap:0;background:var(--dark-4);border:1px solid var(--border);padding:2px;margin-bottom:16px;width:fit-content;}
-.p-tabs button{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;background:none;border:none;color:var(--text-dim);cursor:pointer;transition:all 0.15s;}
+.p-tabs button{font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;background:none;border:none;color:var(--text-dim);cursor:pointer;transition:all 0.15s;}
 .p-tabs button.active{background:var(--brass);color:var(--dark);}
 .p-tbl-wrap{background:var(--dark-2);border:1px solid var(--border);margin-bottom:20px;}
 .p-tbl-controls{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.p-tbl-controls select,.p-tbl-controls input[type=text]{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--dark-3);border:1px solid var(--border);color:var(--text);padding:6px 10px;}
+.p-tbl-controls select,.p-tbl-controls input[type=text]{font-family:IBM Plex Mono,monospace;font-size:11px;background:var(--dark-3);border:1px solid var(--border);color:var(--text);padding:6px 10px;}
 .p-tbl-controls select{min-width:150px;cursor:pointer;}
 .p-tbl-controls input[type=text]{width:200px;}
-.p-filter-btn{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:6px 10px;background:none;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;}
+.p-filter-btn{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:6px 10px;background:none;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;}
 .p-filter-btn.active{background:var(--brass);color:var(--dark);border-color:var(--brass);}
-.sim-input{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--dark-3);border:1px solid var(--border);color:var(--text);padding:4px 8px;width:75px;text-align:right;}
+.sim-input{font-family:IBM Plex Mono,monospace;font-size:11px;background:var(--dark-3);border:1px solid var(--border);color:var(--text);padding:4px 8px;width:75px;text-align:right;}
 .sim-input.changed{background:rgba(184,134,11,0.1);border-color:var(--brass);}
-.p-badge{display:inline-block;padding:2px 6px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;}
+.p-badge{display:inline-block;padding:2px 6px;font-family:IBM Plex Mono,monospace;font-size:9px;font-weight:600;}
 .p-badge.ok{background:rgba(76,175,80,0.15);color:#4CAF50;}
 .p-badge.warn{background:rgba(255,143,0,0.15);color:#FF8F00;}
 .p-badge.bad{background:rgba(229,57,53,0.15);color:#E53935;}
@@ -175,7 +175,7 @@ header{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 
 .p-cost-track{flex:1;height:5px;background:var(--dark-4);}
 .p-cost-fill{height:100%;}
 .stock-dot{color:#4CAF50;font-size:9px;margin-left:4px;}
-.p-loading{padding:40px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);}
+.p-loading{padding:40px;text-align:center;font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--text-dim);}
 
 /* MONTHLY & INVENTORY */
 .month-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
@@ -183,36 +183,36 @@ header{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 
 .month-card:hover{border-color:var(--brass);}
 .month-card.y1{border-top:2px solid #5A5048;}
 .month-card.y2{border-top:2px solid var(--brass);}
-.month-card .mc-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
-.month-card .mc-sales{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;color:var(--text);line-height:1;margin-bottom:8px;}
-.month-card .mc-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:3px;}
+.month-card .mc-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.month-card .mc-sales{font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:1px;color:var(--text);line-height:1;margin-bottom:8px;}
+.month-card .mc-row{display:flex;justify-content:space-between;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);margin-top:3px;}
 .month-card .mc-row span:last-child{color:var(--text-muted);}
-.month-card .yoy-pill{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 5px;}
+.month-card .yoy-pill{font-family:IBM Plex Mono,monospace;font-size:9px;padding:1px 5px;}
 .year-toggle{display:flex;gap:0;background:var(--dark-4);border:1px solid var(--border);padding:2px;margin-bottom:20px;width:fit-content;}
-.year-toggle button{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 16px;background:none;border:none;color:var(--text-dim);cursor:pointer;transition:all 0.15s;}
+.year-toggle button{font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 16px;background:none;border:none;color:var(--text-dim);cursor:pointer;transition:all 0.15s;}
 .year-toggle button.active{background:var(--brass);color:var(--dark);}
 
 /* INVENTORY */
 .inv-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
-.inv-select{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--dark-3);border:1px solid var(--border);color:var(--text);padding:8px 14px;cursor:pointer;min-width:200px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238A8070'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.inv-select{font-family:IBM Plex Mono,monospace;font-size:11px;background:var(--dark-3);border:1px solid var(--border);color:var(--text);padding:8px 14px;cursor:pointer;min-width:200px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238A8070'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
 .inv-select:focus{outline:none;border-color:var(--brass);}
 .inv-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
 .inv-stat{background:var(--dark-3);border:1px solid var(--border);padding:14px 16px;}
-.inv-stat-val{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--brass-light);line-height:1;margin-bottom:4px;}
-.inv-stat-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
+.inv-stat-val{font-family:Bebas Neue,sans-serif;font-size:24px;color:var(--brass-light);line-height:1;margin-bottom:4px;}
+.inv-stat-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
 .inv-table-wrap{background:var(--dark-2);border:1px solid var(--border);padding:20px;}
-.inv-search{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--dark-3);border:1px solid var(--border);color:var(--text);padding:7px 12px;width:260px;margin-bottom:14px;}
+.inv-search{font-family:IBM Plex Mono,monospace;font-size:11px;background:var(--dark-3);border:1px solid var(--border);color:var(--text);padding:7px 12px;width:260px;margin-bottom:14px;}
 .inv-search:focus{outline:none;border-color:var(--brass);}
 .sort-arrow{cursor:pointer;user-select:none;}
 .sort-arrow:hover{color:var(--brass);}
 
 /* DATA SOURCE INFO */
-.data-source{background:var(--dark-3);border:1px solid var(--border);border-left:3px solid var(--blue);padding:12px 16px;margin-bottom:28px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);line-height:2;}
+.data-source{background:var(--dark-3);border:1px solid var(--border);border-left:3px solid var(--blue);padding:12px 16px;margin-bottom:28px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);line-height:2;}
 .data-source strong{color:var(--blue);}
 
-.rank-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);width:20px;flex-shrink:0;}
+.rank-num{font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);width:20px;flex-shrink:0;}
 
-footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:40px;}
+footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;color:var(--text-dim);font-family:IBM Plex Mono,monospace;font-size:10px;margin-top:40px;}
 
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:var(--dark-2);}
@@ -235,7 +235,7 @@ footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify
   <div class="error-title">⚠ Data Load Failed</div>
   <div class="error-msg">Could not fetch CSV files from GitHub. Make sure your files are uploaded to:<br><strong>BHERRIN7/brassstap-data/data/</strong></div>
   <div class="error-files" id="error-files"></div>
-  <div style="margin-top:16px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim)">Check the browser console for details.</div>
+  <div style="margin-top:16px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim)">Check the browser console for details.</div>
 </div>
 
 <!-- MAIN APP (hidden until loaded) -->
@@ -484,7 +484,7 @@ footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify
       <button onclick="filterMonths('Y1',this)">Year 1</button>
       <button onclick="filterMonths('Y2',this)">Year 2</button>
     </div>
-    <div id="monthly-totals" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim)"></div>
+    <div id="monthly-totals" style="font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--text-dim)"></div>
   </div>
   <div class="month-grid" id="monthCards"></div>
   <div class="section-label">Monthly Trend Charts</div>
@@ -560,7 +560,7 @@ footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify
       <tbody id="invTableBody"></tbody>
     </table>
   </div>
-  <div id="invEmpty" style="padding:60px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim)">
+  <div id="invEmpty" style="padding:60px;text-align:center;font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--text-dim)">
     Select a category above to view item performance
   </div>
 </div>
@@ -649,7 +649,7 @@ footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify
           <button class="p-filter-btn" onclick="pSetFilter('over',this)">✗ Over Target</button>
           <button class="p-filter-btn" onclick="pSetFilter('stock',this)">● In Stock</button>
           <button class="p-filter-btn" onclick="pSetFilter('nodata',this)">No Cost</button>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-left:auto" id="p-items-count"></span>
+          <span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);margin-left:auto" id="p-items-count"></span>
         </div>
         <table class="data-table">
           <thead><tr>
@@ -670,7 +670,7 @@ footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify
 
     <!-- OPPORTUNITIES sub-tab -->
     <div id="p-sub-opportunities" class="p-subtab" style="display:none">
-      <div style="background:var(--dark-3);border:1px solid var(--border);border-left:3px solid var(--amber);padding:12px 16px;margin-bottom:16px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);line-height:2">
+      <div style="background:var(--dark-3);border:1px solid var(--border);border-left:3px solid var(--amber);padding:12px 16px;margin-bottom:16px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-muted);line-height:2">
         Ranked by estimated annual revenue gain if priced at target. <strong style="color:var(--green)">●</strong> = currently in stock. Annual gain estimated from recent 4-month run rate × 3.
       </div>
       <div class="section-label">Quick Wins — Price Increase Under $1.50</div>
@@ -710,7 +710,7 @@ footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify
           <input type="text" id="p-sim-search" placeholder="Search..." oninput="pRenderSim()">
           <button class="p-filter-btn" onclick="pApplyTargetAll()">Apply Target to Visible</button>
           <button class="p-filter-btn" onclick="pResetSim()">Reset All</button>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-left:auto" id="p-sim-count"></span>
+          <span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);margin-left:auto" id="p-sim-count"></span>
         </div>
         <table class="data-table">
           <thead><tr>
@@ -1047,7 +1047,7 @@ function buildDashboard(D) {
       <td class="num">$${ag.toFixed(2)}</td>
       <td><div style="display:flex;align-items:center;gap:8px">
         <div style="flex:1;height:6px;background:var(--dark-4)"><div style="width:${parseFloat(sp)/20*100}%;height:100%;background:var(--brass)"></div></div>
-        <span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text-muted);width:34px">${sp}%</span>
+        <span style="font-family:IBM Plex Mono;font-size:10px;color:var(--text-muted);width:34px">${sp}%</span>
       </div></td>
     </tr>`;
   }).join('');
@@ -1556,8 +1556,8 @@ function pSuggestPrice(item, target) {
   if(!item.pour_cost) return '—';
   const needed = item.pour_cost / (target/100);
   const rounded = Math.ceil(needed * 4) / 4;
-  if(rounded <= item.sell_price + 0.01) return '<span style="color:#4CAF50;font-family:'IBM Plex Mono',monospace;font-size:11px">$' + item.sell_price.toFixed(2) + ' ✓</span>';
-  return '<span style="color:var(--brass-light);font-family:'IBM Plex Mono',monospace;font-size:11px">$' + rounded.toFixed(2) + '</span>';
+  if(rounded <= item.sell_price + 0.01) return '<span style="color:#4CAF50;font-family:IBM Plex Mono,monospace;font-size:11px">$' + item.sell_price.toFixed(2) + ' ✓</span>';
+  return '<span style="color:var(--brass-light);font-family:IBM Plex Mono,monospace;font-size:11px">$' + rounded.toFixed(2) + '</span>';
 }
 
 function pWeightedCost(items, simP) {
@@ -1607,7 +1607,7 @@ function pRenderCatCards() {
     return '<div class="p-cat-card" style="border-top:2px solid '+catColors[s.cat]+'">' +
       '<div class="p-cat-label">' + s.cat + '</div>' +
       '<div class="p-cat-pct" style="color:'+col+'">' + s.pct.toFixed(1) + '%</div>' +
-      '<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:'+col+';margin-bottom:8px">' +
+      '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:'+col+';margin-bottom:8px">' +
         (diff>0?'+':'')+diff.toFixed(1)+'% vs '+pTarget+'% target</div>' +
       '<div class="p-cat-track"><div class="p-cat-fill" style="width:'+barW+'%;background:'+col+'"></div></div>' +
       '<div class="p-cat-foot"><span>'+s.items+' items</span><span>$'+Math.round(s.net/1000)+'k recent</span></div>' +
@@ -1651,7 +1651,7 @@ function pRenderOverview() {
   // Top 15
   const top15 = PRICING.filter(i=>i.cost_pct>pTarget).sort((a,b)=>b.net_recent-a.net_recent).slice(0,15);
   document.getElementById('p-top15-body').innerHTML = top15.map((item,i)=>`<tr>
-    <td><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text-dim)">${i+1}</span></td>
+    <td><span style="font-family:IBM Plex Mono;font-size:10px;color:var(--text-dim)">${i+1}</span></td>
     <td>${item.item}${item.has_stock?'<span class="stock-dot" title="In stock">●</span>':''}</td>
     <td style="color:var(--text-muted)">${item.category}</td>
     <td class="num">$${item.sell_price.toFixed(2)}</td>
@@ -1700,7 +1700,7 @@ function pRenderItems() {
       <td style="color:var(--text-muted)">${item.category}</td>
       <td class="num">$${item.sell_price.toFixed(2)}</td>
       <td class="num">${item.pour_cost?'$'+item.pour_cost.toFixed(3):'—'}</td>
-      <td class="num"><div class="p-cost-bar"><div class="p-cost-track"><div class="p-cost-fill" style="width:${barW}%;background:${pGetColor(item.cost_pct,pTarget)}"></div></div><span style="font-size:10px;font-family:'IBM Plex Mono';min-width:38px;text-align:right;color:${pGetColor(item.cost_pct,pTarget)}">${item.cost_pct?item.cost_pct.toFixed(1)+'%':'—'}</span></div></td>
+      <td class="num"><div class="p-cost-bar"><div class="p-cost-track"><div class="p-cost-fill" style="width:${barW}%;background:${pGetColor(item.cost_pct,pTarget)}"></div></div><span style="font-size:10px;font-family:IBM Plex Mono;min-width:38px;text-align:right;color:${pGetColor(item.cost_pct,pTarget)}">${item.cost_pct?item.cost_pct.toFixed(1)+'%':'—'}</span></div></td>
       <td>${pBadge(item.cost_pct,pTarget)}</td>
       <td class="num" style="color:var(--brass-light)">$${Math.round(item.net_recent).toLocaleString()}</td>
       <td class="num">${Math.round(item.qty_recent).toLocaleString()}</td>
@@ -1722,7 +1722,7 @@ function pRenderOpportunities() {
   const all = over.map(i=>({...i,...calcGain(i)})).filter(i=>i.inc>0).sort((a,b)=>b.annualGain-a.annualGain);
 
   const rowHTML = (item,i) => `<tr>
-    <td style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text-dim)">${i+1}</td>
+    <td style="font-family:IBM Plex Mono;font-size:10px;color:var(--text-dim)">${i+1}</td>
     <td>${item.item}${item.has_stock?'<span class="stock-dot">●</span>':''}</td>
     <td style="color:var(--text-muted)">${item.category}</td>
     <td class="num">$${item.sell_price.toFixed(2)}</td>
@@ -1774,15 +1774,14 @@ function pRenderSim() {
     const simCostPct = item.pour_cost?(item.pour_cost/simP*100):null;
     const impact = (simP-item.sell_price)*item.qty_recent*3;
     const changed = pSimPrices[item.item]!=null&&pSimPrices[item.item]!==item.sell_price;
-    const safeItem = item.item.replace(/\/g,'\\').replace(/'/g,"\'");
     return `<tr style="${changed?'background:rgba(184,134,11,0.05)':''}">
       <td>${item.item}${item.has_stock?'<span class="stock-dot">●</span>':''}</td>
       <td style="color:var(--text-muted)">${item.category}</td>
       <td class="num">$${item.pour_cost.toFixed(3)}</td>
       <td class="num" style="color:var(--text-muted)">$${item.sell_price.toFixed(2)}</td>
       <td class="num"><input type="number" step="0.25" min="0.01" value="${simP.toFixed(2)}"
-        class="sim-input ${changed?'changed':''}"
-        onchange="pUpdateSim('${safeItem}',parseFloat(this.value))" onfocus="this.select()"></td>
+        class="sim-input ${changed?'changed':''}" data-item="${encodeURIComponent(item.item)}"
+        onchange="pUpdateSim(decodeURIComponent(this.dataset.item),parseFloat(this.value))" onfocus="this.select()"></td>
       <td class="num">${pBadge(item.cost_pct,pTarget)}</td>
       <td class="num" style="color:${simCostPct?pGetColor(simCostPct,pTarget):'var(--text-dim)'}">
         ${simCostPct?simCostPct.toFixed(1)+'%':'—'}</td>
