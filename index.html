@@ -778,11 +778,18 @@ const y1C = 'rgba(138,128,112,0.7)', y2C = brassA;
 // ═══════════════════════════════════════════════
 async function fetchCSV(key) {
   const filename = FILES[key];
-  // For JSON files, skip jsDelivr (tag may predate file upload) and try raw/proxy directly
   const isJSON = filename.endsWith('.json');
-  const urls = isJSON
-    ? [ RAWGIT + filename, PROXY + filename ]
-    : [ JSDELIVR + filename, RAWGIT + filename, PROXY + filename ];
+  const rawURL = RAWGIT + filename;
+  const urls = isJSON ? [
+    // For JSON: skip jsDelivr (tag predates file), try multiple proxies
+    'https://corsproxy.io/?' + encodeURIComponent(rawURL),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawURL),
+    rawURL,
+  ] : [
+    JSDELIVR + filename,
+    'https://corsproxy.io/?' + encodeURIComponent(rawURL),
+    rawURL,
+  ];
   let lastError;
   for (const url of urls) {
     try {
@@ -791,7 +798,7 @@ async function fetchCSV(key) {
       const text = await res.text();
       if (isJSON) {
         try { return JSON.parse(text); }
-        catch(e) { lastError = new Error(filename + ': JSON parse failed'); continue; }
+        catch(e) { lastError = new Error(filename + ': bad JSON'); continue; }
       }
       return await new Promise((resolve, reject) => {
         Papa.parse(text, {
