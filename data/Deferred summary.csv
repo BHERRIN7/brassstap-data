@@ -1,3 +1,2 @@
-Deferred type,Net amount,Gross amount,Discounts,Refunds
-Deferred (gift cards),22703.88,29325.91,6622.03,0.0
-Deferred (other),6767.0,6767.0,0.0,0.0
+Deferred type,Gross amount,Discounts,Refunds,Net amount
+Deferred (gift cards),960.0,860.0,0.0,100.0
