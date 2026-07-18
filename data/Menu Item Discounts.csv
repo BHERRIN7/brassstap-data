@@ -1,7 +1,9 @@
 Discount,Count,Orders,Amount
-Comp Item,50,35,357.75
-Discount $ (Item),20,12,71.0
-Employee 50% (mgr),27,20,131.76
-Discount % (Item),25,14,68.35
-10% OFF,14,8,16.38
-Total,136,89,645.24
+Comp Item,251,191,2250.95
+LP Kitchen,1,1,16.5
+Discount $ (Item),82,56,325.5
+Employee 50% (mgr),114,83,535.78
+Discount % (Item),131,60,348.0
+10% OFF,85,36,95.1
+Employee 100% (mgr),1,1,16.5
+Total,665,428,3588.33
