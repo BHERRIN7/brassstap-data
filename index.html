@@ -184,6 +184,7 @@ header{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 
 .month-card:hover{border-color:var(--brass);}
 .month-card.y1{border-top:2px solid #5A5048;}
 .month-card.y2{border-top:2px solid var(--brass);}
+.month-card.y3{border-top:2px solid var(--green);}
 .month-card .mc-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
 .month-card .mc-sales{font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:1px;color:var(--text);line-height:1;margin-bottom:8px;}
 .month-card .mc-row{display:flex;justify-content:space-between;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);margin-top:3px;}
@@ -288,7 +289,12 @@ footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify
       <div class="yoy-sub" id="yoy-y2-sub">—</div>
     </div>
     <div class="yoy-col">
-      <div class="yoy-period">Revenue Growth</div>
+      <div class="yoy-period">Year 3 · Jun '26 – May '27</div>
+      <div class="yoy-amount" style="color:var(--green)" id="yoy-y3-sales">—</div>
+      <div class="yoy-sub" id="yoy-y3-sub">—</div>
+    </div>
+    <div class="yoy-col">
+      <div class="yoy-period">Y2→Y3 Growth</div>
       <div class="yoy-amount growth" id="yoy-growth">—</div>
       <div class="yoy-sub" id="yoy-growth-sub">—</div>
     </div>
@@ -484,6 +490,7 @@ footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify
       <button class="active" onclick="filterMonths('all',this)">All</button>
       <button onclick="filterMonths('Y1',this)">Year 1</button>
       <button onclick="filterMonths('Y2',this)">Year 2</button>
+      <button onclick="filterMonths('Y3',this)">Year 3</button>
     </div>
     <div id="monthly-totals" style="font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--text-dim)"></div>
   </div>
@@ -868,14 +875,19 @@ function buildDashboard(D) {
   })).filter(r => !isNaN(r.date)).sort((a,b) => a.date - b.date);
 
   const y1cut = new Date('2025-06-01');
+  const y2cut = new Date('2026-06-01');
   const y1 = sbd.filter(r => r.date < y1cut);
-  const y2 = sbd.filter(r => r.date >= y1cut);
+  const y2 = sbd.filter(r => r.date >= y1cut && r.date < y2cut);
+  const y3 = sbd.filter(r => r.date >= y2cut);
 
   const sum = arr => arr.reduce((s,v) => s+v, 0);
   const y1s = sum(y1.map(r=>r.sales)), y2s = sum(y2.map(r=>r.sales));
+  const y3s = sum(y3.map(r=>r.sales));
   const y1o = sum(y1.map(r=>r.orders)), y2o = sum(y2.map(r=>r.orders));
+  const y3o = sum(y3.map(r=>r.orders));
   const y1g = sum(y1.map(r=>r.guests)), y2g = sum(y2.map(r=>r.guests));
-  const totalSales = y1s + y2s;
+  const y3g = sum(y3.map(r=>r.guests));
+  const totalSales = y1s + y2s + y3s;
   const growth = ((y2s/y1s)-1)*100;
 
   // Date range
@@ -892,8 +904,11 @@ function buildDashboard(D) {
   document.getElementById('yoy-y1-sub').textContent = `${y1o.toLocaleString()} orders · ${y1g.toLocaleString()} guests`;
   document.getElementById('yoy-y2-sales').textContent = '$' + y2s.toLocaleString('en-US',{maximumFractionDigits:0});
   document.getElementById('yoy-y2-sub').textContent = `${y2o.toLocaleString()} orders · ${y2g.toLocaleString()} guests`;
-  document.getElementById('yoy-growth').textContent = (growth>0?'+':'') + growth.toFixed(1) + '%';
-  document.getElementById('yoy-growth-sub').textContent = (growth>0?'+':'')+' $'+ Math.abs(y2s-y1s).toLocaleString('en-US',{maximumFractionDigits:0}) + ' net sales';
+  document.getElementById('yoy-y3-sales').textContent = y3s > 0 ? '$' + y3s.toLocaleString('en-US',{maximumFractionDigits:0}) : 'In progress';
+  document.getElementById('yoy-y3-sub').textContent = y3o > 0 ? `${y3o.toLocaleString()} orders · ${y3.length} days` : '—';
+  const growth23 = y2s > 0 ? ((y3s / (y2s/12*y3.length))-1)*100 : 0; // pace-adjusted
+  document.getElementById('yoy-growth').textContent = y3s > 0 ? (growth23>0?'+':'') + growth23.toFixed(1) + '% pace' : (growth>0?'+':'') + growth.toFixed(1) + '%';
+  document.getElementById('yoy-growth-sub').textContent = y3s > 0 ? 'Y3 vs Y2 daily avg pace' : (growth>0?'+':'')+' $'+ Math.abs(y2s-y1s).toLocaleString('en-US',{maximumFractionDigits:0}) + ' net sales';
   document.getElementById('yoy-total').textContent = '$' + totalSales.toLocaleString('en-US',{maximumFractionDigits:0});
   document.getElementById('yoy-total-sub').textContent = `${(y1o+y2o).toLocaleString()} orders · ${(y1g+y2g).toLocaleString()} guests`;
   document.getElementById('rev-total').textContent = '$' + totalSales.toLocaleString('en-US',{maximumFractionDigits:0});
@@ -1270,6 +1285,7 @@ function buildMonthlyTab(sbd) {
   });
 
   const y1cut = new Date('2025-06-01');
+  const y2cut2 = new Date('2026-06-01');
   allMonthData = Object.entries(monthly).sort().map(([key, v]) => {
     const [yr, mo] = key.split('-');
     const d = new Date(parseInt(yr), parseInt(mo)-1, 1);
@@ -1277,7 +1293,7 @@ function buildMonthlyTab(sbd) {
     return {
       key,
       label: d.toLocaleDateString('en-US',{month:'short',year:'2-digit'}),
-      year: d < y1cut ? 'Y1' : 'Y2',
+      year: d < y1cut ? 'Y1' : d < y2cut2 ? 'Y2' : 'Y3',
       net_sales: totalSales,
       orders: v.orders,
       guests: v.guests,
@@ -1340,7 +1356,7 @@ function renderMonthCards() {
 
 function renderMonthCharts() {
   const labels = allMonthData.map(m=>m.label);
-  const colors = allMonthData.map(m=>m.year==='Y1'?'rgba(138,128,112,0.75)':'rgba(212,160,23,0.85)');
+  const colors = allMonthData.map(m=>m.year==='Y1'?'rgba(138,128,112,0.75)':m.year==='Y2'?'rgba(212,160,23,0.85)':'rgba(76,175,80,0.85)');
   const brass = '#D4A017';
 
   new Chart(document.getElementById('allMonthsBar'), {
