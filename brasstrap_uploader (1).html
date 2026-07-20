@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brass Tap Marietta — Dashboard Updater</title>
+<style>
+:root {
+  --brass:#B8860B; --brass-light:#D4A017; --dark:#0E0E0E; --dark-2:#161616;
+  --dark-3:#1E1E1E; --dark-4:#272727; --border:#2E2E2E; --text:#E8E0D0;
+  --text-dim:#555050; --text-muted:#8A8070; --green:#4CAF50; --red:#E53935;
+  --amber:#FF8F00;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--dark);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 20px;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;margin-bottom:4px;}
+.logo span{color:var(--brass);}
+.subtitle{font-size:10px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:40px;}
+.card{background:var(--dark-2);border:1px solid var(--border);padding:28px;width:100%;max-width:620px;margin-bottom:20px;}
+.card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--brass);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+label{display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
+input[type=text],input[type=password]{width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 12px;margin-bottom:16px;outline:none;}
+input[type=text]:focus,input[type=password]:focus{border-color:var(--brass);}
+.drop-zone{border:2px dashed var(--border);padding:40px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;}
+.drop-zone.drag-over{border-color:var(--brass);background:rgba(184,134,11,0.05);}
+.drop-zone-icon{font-size:32px;margin-bottom:12px;opacity:0.4;}
+.drop-zone-text{font-size:11px;color:var(--text-muted);line-height:2;}
+.drop-zone-text strong{color:var(--brass-light);}
+input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.file-list{margin-top:16px;}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);margin-bottom:4px;font-size:11px;}
+.file-item .name{color:var(--text-muted);}
+.file-item .status{font-size:10px;}
+.file-item .status.pending{color:var(--text-dim);}
+.file-item .status.uploading{color:var(--amber);}
+.file-item .status.done{color:var(--green);}
+.file-item .status.error{color:var(--red);}
+.btn{width:100%;background:var(--brass);color:var(--dark);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;border:none;padding:14px;cursor:pointer;margin-top:12px;font-weight:600;transition:background 0.2s;}
+.btn:hover{background:var(--brass-light);}
+.btn:disabled{background:var(--dark-4);color:var(--text-dim);cursor:not-allowed;}
+.btn-secondary{background:var(--dark-3);color:var(--text-muted);border:1px solid var(--border);}
+.btn-secondary:hover{background:var(--dark-4);color:var(--text);}
+.log{background:var(--dark-3);border:1px solid var(--border);padding:16px;font-size:10px;line-height:2;max-height:200px;overflow-y:auto;margin-top:16px;}
+.log-line{display:flex;gap:10px;}
+.log-time{color:var(--text-dim);flex-shrink:0;}
+.log-msg{color:var(--text-muted);}
+.log-msg.success{color:var(--green);}
+.log-msg.error{color:var(--red);}
+.log-msg.info{color:var(--brass-light);}
+.progress-bar{height:3px;background:var(--dark-4);margin-top:16px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--brass);width:0%;transition:width 0.3s;}
+.token-note{font-size:9px;color:var(--text-dim);line-height:1.8;margin-top:8px;}
+.token-note a{color:var(--brass);text-decoration:none;}
+.token-note a:hover{text-decoration:underline;}
+.saved-badge{display:inline-block;background:rgba(76,175,80,0.15);color:var(--green);font-size:9px;padding:2px 8px;margin-left:8px;vertical-align:middle;}
+.tag-display{display:flex;align-items:center;gap:10px;margin-top:6px;}
+.tag-val{font-size:20px;font-family:'Bebas Neue',sans-serif;color:var(--brass-light);}
+.clear-btn{font-size:9px;color:var(--text-dim);background:none;border:1px solid var(--border);padding:3px 8px;cursor:pointer;font-family:'IBM Plex Mono',monospace;}
+.clear-btn:hover{color:var(--red);border-color:var(--red);}
+.expected-files{margin-top:12px;font-size:9px;color:var(--text-dim);line-height:1.9;}
+.expected-files span{color:var(--text-muted);}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="logo">THE BRASS TAP <span>MARIETTA</span></div>
+<div class="subtitle">Dashboard Updater · Store 188</div>
+
+<!-- SETTINGS -->
+<div class="card">
+  <div class="card-title">GitHub Settings</div>
+
+  <label>Personal Access Token <span id="token-saved-badge"></span></label>
+  <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveSettings()">
+  <div class="token-note">
+    Generate at <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a>
+    → Select <strong>repo</strong> scope → Generate → paste here. Saved in your browser only.
+  </div>
+
+  <div style="margin-top:16px">
+    <label>Repository</label>
+    <input type="text" id="repo" value="BHERRIN7/brassstap-data" oninput="saveSettings()">
+  </div>
+
+  <div>
+    <label>Data folder path in repo</label>
+    <input type="text" id="folder" value="data" oninput="saveSettings()">
+  </div>
+
+  <div>
+    <label>Current Release Tag</label>
+    <div class="tag-display">
+      <div class="tag-val" id="current-tag-display">—</div>
+      <input type="text" id="current-tag" placeholder="v1.4" style="width:100px;margin-bottom:0" oninput="updateNextTag()">
+      <span style="font-size:10px;color:var(--text-dim)">→ next will be <strong id="next-tag-display" style="color:var(--brass-light)">—</strong></span>
+    </div>
+    <div class="token-note" style="margin-top:6px">Set this to your current tag so the tool knows what to increment to.</div>
+  </div>
+</div>
+
+<!-- FILE DROP -->
+<div class="card">
+  <div class="card-title">Drop CSV Files</div>
+
+  <div class="drop-zone" id="drop-zone">
+    <input type="file" id="file-input" multiple accept=".csv" onchange="handleFiles(this.files)">
+    <div class="drop-zone-icon">📂</div>
+    <div class="drop-zone-text">
+      <strong>Drag & drop your Toast CSV exports here</strong><br>
+      or click to browse · accepts multiple files at once
+    </div>
+  </div>
+
+  <div class="expected-files">
+    Expected files: <span>Sales by day · Day of week (totals) · Time of day (totals) · Payments summary · Service mode summary · Service Daypart summary · Net sales summary · Revenue summary · Tip summary · Void summary · Check Discounts · Dining options summary · Sales category summary · Top Items · Top Sales Categories · Menu Item by Sales Category</span>
+  </div>
+
+  <div class="file-list" id="file-list"></div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <button class="btn" id="upload-btn" onclick="startUpload()" disabled>
+    Upload to GitHub & Create Release Tag
+  </button>
+  <button class="btn btn-secondary" id="clear-btn" onclick="clearFiles()" style="margin-top:6px">
+    Clear Files
+  </button>
+
+  <div class="log" id="log" style="display:none"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'brasstrap_uploader_settings';
+let selectedFiles = [];
+
+// ── Settings persistence ──────────────────────────────────────────
+function saveSettings() {
+  const s = {
+    token: document.getElementById('token').value,
+    repo: document.getElementById('repo').value,
+    folder: document.getElementById('folder').value,
+    tag: document.getElementById('current-tag').value,
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  updateNextTag();
+  const badge = document.getElementById('token-saved-badge');
+  if(s.token) {
+    badge.innerHTML = '<span class="saved-badge">SAVED</span>';
+  } else {
+    badge.innerHTML = '';
+  }
+}
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if(s.token) document.getElementById('token').value = s.token;
+    if(s.repo)  document.getElementById('repo').value = s.repo;
+    if(s.folder) document.getElementById('folder').value = s.folder;
+    if(s.tag)   document.getElementById('current-tag').value = s.tag;
+    saveSettings();
+  } catch(e) {}
+}
+
+function updateNextTag() {
+  const cur = document.getElementById('current-tag').value.trim();
+  document.getElementById('current-tag-display').textContent = cur || '—';
+  const next = incrementTag(cur);
+  document.getElementById('next-tag-display').textContent = next || '—';
+}
+
+function incrementTag(tag) {
+  if(!tag) return '';
+  const m = tag.match(/^(v?)(\d+)\.(\d+)$/);
+  if(!m) return '';
+  return `${m[1]}${m[2]}.${parseInt(m[3])+1}`;
+}
+
+// ── Drag & drop ───────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  for(const f of files) {
+    if(!f.name.endsWith('.csv')) continue;
+    if(!selectedFiles.find(x => x.name === f.name)) {
+      selectedFiles.push(f);
+    }
+  }
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = selectedFiles.map((f, i) => `
+    <div class="file-item" id="file-${i}">
+      <span class="name">${f.name}</span>
+      <span class="status pending" id="status-${i}">ready</span>
+    </div>`).join('');
+  document.getElementById('upload-btn').disabled = selectedFiles.length === 0 || !document.getElementById('token').value;
+}
+
+function clearFiles() {
+  selectedFiles = [];
+  renderFileList();
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('log').style.display = 'none';
+  document.getElementById('log').innerHTML = '';
+}
+
+// ── Logging ───────────────────────────────────────────────────────
+function log(msg, type='') {
+  const el = document.getElementById('log');
+  el.style.display = 'block';
+  const time = new Date().toLocaleTimeString('en-US', {hour12:false});
+  el.innerHTML += `<div class="log-line"><span class="log-time">${time}</span><span class="log-msg ${type}">${msg}</span></div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── GitHub API helpers ────────────────────────────────────────────
+function getHeaders() {
+  const token = document.getElementById('token').value.trim();
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+}
+
+async function getFileSHA(repo, path) {
+  try {
+    const encodedPath = path.split('/').map(p => encodeURIComponent(p)).join('/');
+    const r = await fetch(`https://api.github.com/repos/${repo}/contents/${encodedPath}`, { headers: getHeaders() });
+    if(r.status === 404) return null;
+    const d = await r.json();
+    return d.sha || null;
+  } catch(e) { return null; }
+}
+
+async function uploadFile(repo, path, content, sha) {
+  const body = {
+    message: `Update ${path.split('/').pop()} — ${new Date().toISOString().slice(0,10)}`,
+    content: content,
+    branch: 'main',
+  };
+  if(sha) body.sha = sha;
+
+  const encodedPath = path.split('/').map(p => encodeURIComponent(p)).join('/');
+  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${encodedPath}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(body),
+  });
+  if(!r.ok) {
+    const err = await r.json();
+    throw new Error(err.message || `HTTP ${r.status}`);
+  }
+  return r.json();
+}
+
+async function getLatestCommitSHA(repo) {
+  const r = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/main`, { headers: getHeaders() });
+  const d = await r.json();
+  return d.object.sha;
+}
+
+async function createTag(repo, tag, commitSHA) {
+  // Create tag object
+  const tagRes = await fetch(`https://api.github.com/repos/${repo}/git/tags`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      tag,
+      message: `Dashboard update ${tag} — ${new Date().toISOString().slice(0,10)}`,
+      object: commitSHA,
+      type: 'commit',
+    }),
+  });
+  if(!tagRes.ok) throw new Error('Failed to create tag object');
+  const tagData = await tagRes.json();
+
+  // Create ref pointing to tag
+  const refRes = await fetch(`https://api.github.com/repos/${repo}/git/refs`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      ref: `refs/tags/${tag}`,
+      sha: tagData.sha,
+    }),
+  });
+  if(!refRes.ok) {
+    const e = await refRes.json();
+    throw new Error(e.message || 'Failed to create tag ref');
+  }
+
+  // Create GitHub release
+  await fetch(`https://api.github.com/repos/${repo}/releases`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      tag_name: tag,
+      name: `Dashboard ${tag}`,
+      body: `Automated update ${new Date().toISOString().slice(0,10)}`,
+      draft: false,
+      prerelease: false,
+    }),
+  });
+}
+
+// ── Main upload flow ──────────────────────────────────────────────
+async function startUpload() {
+  const token = document.getElementById('token').value.trim();
+  const repo  = document.getElementById('repo').value.trim();
+  const folder = document.getElementById('folder').value.trim().replace(/\/$/, '');
+  const curTag = document.getElementById('current-tag').value.trim();
+  const nextTag = incrementTag(curTag);
+
+  if(!token) { alert('Please enter your GitHub Personal Access Token.'); return; }
+  if(!nextTag) { alert('Please set your current release tag (e.g. v1.4) so the tool can auto-increment it.'); return; }
+  if(selectedFiles.length === 0) { alert('No files selected.'); return; }
+
+  document.getElementById('upload-btn').disabled = true;
+  document.getElementById('clear-btn').disabled = true;
+  document.getElementById('log').innerHTML = '';
+
+  log(`Starting upload of ${selectedFiles.length} file(s) to ${repo}/${folder}/`, 'info');
+  log(`Will create release tag: ${nextTag}`, 'info');
+
+  let done = 0;
+
+  for(let i = 0; i < selectedFiles.length; i++) {
+    const file = selectedFiles[i];
+    const statusEl = document.getElementById(`status-${i}`);
+    statusEl.className = 'status uploading';
+    statusEl.textContent = 'uploading…';
+
+    try {
+      // Read file as base64
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(btoa(e.target.result));
+        reader.onerror = reject;
+        reader.readAsBinaryString(file);
+      });
+
+      const path = `${folder}/${file.name}`;
+      const sha = await getFileSHA(repo, path);
+      await uploadFile(repo, path, base64, sha);
+
+      statusEl.className = 'status done';
+      statusEl.textContent = '✓ done';
+      log(`✓ ${file.name}`, 'success');
+    } catch(e) {
+      statusEl.className = 'status error';
+      statusEl.textContent = '✗ error';
+      log(`✗ ${file.name}: ${e.message}`, 'error');
+    }
+
+    done++;
+    document.getElementById('progress-fill').style.width = (done / selectedFiles.length * 80) + '%';
+  }
+
+  // Create release tag
+  log(`Creating release tag ${nextTag}…`, 'info');
+  try {
+    const commitSHA = await getLatestCommitSHA(repo);
+    await createTag(repo, nextTag, commitSHA);
+    log(`✓ Release tag ${nextTag} created`, 'success');
+    document.getElementById('progress-fill').style.width = '100%';
+
+    // Save new tag as current
+    document.getElementById('current-tag').value = nextTag;
+    saveSettings();
+
+    log(`🎉 Done! Dashboard will update at bherrin7.github.io/brassstap-data/ within ~2 minutes.`, 'success');
+  } catch(e) {
+    log(`✗ Tag creation failed: ${e.message} — you may need to create it manually in GitHub Releases.`, 'error');
+  }
+
+  document.getElementById('upload-btn').disabled = false;
+  document.getElementById('clear-btn').disabled = false;
+}
+
+// Init
+loadSettings();
+renderFileList();
+</script>
+</body>
+</html>
