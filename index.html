@@ -1145,7 +1145,7 @@ function buildDashboard(D) {
   }).join('');
 
   // ── Categories ──────────────────────────────
-  const cats = (D.top_categories || []).sort((a,b)=>(b['ITEM_NET_AMOUNT']||0)-(a['ITEM_NET_AMOUNT']||0));
+  const cats = (D.top_categories || []).map(c=>({...c,'SALES_CATEGORY_NAME':c['SALES_CATEGORY_NAME']||'No Category'})).filter(c=>c['SALES_CATEGORY_NAME']!='No Category').sort((a,b)=>(b['ITEM_NET_AMOUNT']||0)-(a['ITEM_NET_AMOUNT']||0));
   const maxCat = cats[0]?.['ITEM_NET_AMOUNT']||1;
   const catColors = ['#B8860B','#8A6800','#5C4400','#D4A017','#E8C048','#4FC3F7','#4CAF50','#FF8F00','#E53935','#AB47BC','#26A69A','#78909C'];
 
@@ -1482,7 +1482,7 @@ function buildInventoryTab(menuItems) {
   invData = {};
   menuItems.forEach(r => {
     const cat = r['SALES_CATEGORY_NAME'];
-    if(!cat || cat === 'No Sales Category Assigned') return;
+    if(!cat || cat === 'No Sales Category Assigned' || cat === 'NULL' || cat === 'null') return;
     if(!invData[cat]) invData[cat] = [];
     invData[cat].push({
       name: r['MENU_ITEM_NAME'] || '—',
