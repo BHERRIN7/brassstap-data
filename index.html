@@ -74,12 +74,33 @@ header{background:var(--dark-2);border-bottom:1px solid var(--border);padding:0 
 .badge.neutral{background:rgba(184,134,11,0.15);color:var(--brass);}
 .kpi-prev{color:var(--text-dim);}
 
-/* YOY BANNER */
-.yoy-banner{background:linear-gradient(135deg,var(--dark-3) 0%,var(--dark-4) 100%);border:1px solid var(--border);border-left:3px solid var(--brass);padding:20px 28px;margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;}
-.yoy-col{padding:0 24px;border-right:1px solid var(--border);}
-.yoy-col:first-child{padding-left:0;}
-.yoy-col:last-child{border-right:none;}
-.yoy-period{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
+/* YOY CARDS */
+.yoy-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+.yoy-card{background:var(--dark-2);border:1px solid var(--border);padding:24px 28px;position:relative;overflow:hidden;}
+.yoy-card.y1{border-top:3px solid #5A5048;}
+.yoy-card.y2{border-top:3px solid var(--brass);}
+.yoy-card.y3{border-top:3px solid var(--green);}
+.yoy-card-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;}
+.yoy-card-amount{font-family:Bebas Neue,sans-serif;font-size:48px;letter-spacing:1px;line-height:1;margin-bottom:8px;}
+.yoy-card-amount.y1{color:var(--text-muted);}
+.yoy-card-amount.y2{color:var(--brass-light);}
+.yoy-card-amount.y3{color:var(--green);}
+.yoy-card-sub{font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);margin-bottom:16px;line-height:1.8;}
+.yoy-card-bar{height:3px;background:var(--dark-4);}
+.yoy-card-bar-fill{height:100%;transition:width 1s ease;}
+.yoy-card-bar-fill.y1{background:#5A5048;}
+.yoy-card-bar-fill.y2{background:var(--brass);}
+.yoy-card-bar-fill.y3{background:var(--green);}
+/* YOY METRICS */
+.yoy-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px;}
+.yoy-metric{background:var(--dark-3);border:1px solid var(--border);padding:16px 20px;}
+.yoy-metric-label{font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
+.yoy-metric-val{font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:1px;line-height:1;margin-bottom:4px;color:var(--text);}
+.yoy-metric-val.green{color:var(--green);}
+.yoy-metric-val.brass{color:var(--brass-light);}
+.yoy-metric-val.blue{color:var(--blue);}
+.yoy-metric-sub{font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--text-dim);}
+/* legacy — keep for other uses */
 .yoy-amount{font-family:Bebas Neue,sans-serif;font-size:36px;letter-spacing:1px;line-height:1;margin-bottom:4px;}
 .yoy-amount.y1{color:var(--text-muted);}
 .yoy-amount.y2{color:var(--brass-light);}
@@ -277,31 +298,55 @@ footer{border-top:1px solid var(--border);padding:16px 32px;display:flex;justify
     Drop new CSVs in the /data/ folder to update this dashboard
   </div>
   <div class="section-label">Year-over-Year Summary</div>
-  <div class="yoy-banner">
-    <div class="yoy-col">
-      <div class="yoy-period">Year 1 · Jun '24 – May '25</div>
-      <div class="yoy-amount y1" id="yoy-y1-sales">—</div>
-      <div class="yoy-sub" id="yoy-y1-sub">—</div>
+
+  <!-- Top row: 3 year cards -->
+  <div class="yoy-cards">
+    <div class="yoy-card y1">
+      <div class="yoy-card-label">YEAR 1 &nbsp;·&nbsp; Jun '24 – May '25</div>
+      <div class="yoy-card-amount y1" id="yoy-y1-sales">—</div>
+      <div class="yoy-card-sub" id="yoy-y1-sub">—</div>
+      <div class="yoy-card-bar"><div class="yoy-card-bar-fill y1" id="yoy-y1-bar" style="width:0%"></div></div>
     </div>
-    <div class="yoy-col">
-      <div class="yoy-period">Year 2 · Jun '25 – May '26</div>
-      <div class="yoy-amount y2" id="yoy-y2-sales">—</div>
-      <div class="yoy-sub" id="yoy-y2-sub">—</div>
+    <div class="yoy-card y2">
+      <div class="yoy-card-label">YEAR 2 &nbsp;·&nbsp; Jun '25 – May '26</div>
+      <div class="yoy-card-amount y2" id="yoy-y2-sales">—</div>
+      <div class="yoy-card-sub" id="yoy-y2-sub">—</div>
+      <div class="yoy-card-bar"><div class="yoy-card-bar-fill y2" id="yoy-y2-bar" style="width:0%"></div></div>
     </div>
-    <div class="yoy-col">
-      <div class="yoy-period">Year 3 · Jun '26 – May '27</div>
-      <div class="yoy-amount" style="color:var(--green)" id="yoy-y3-sales">—</div>
-      <div class="yoy-sub" id="yoy-y3-sub">—</div>
+    <div class="yoy-card y3">
+      <div class="yoy-card-label">YEAR 3 &nbsp;·&nbsp; Jun '26 – May '27</div>
+      <div class="yoy-card-amount y3" id="yoy-y3-sales">—</div>
+      <div class="yoy-card-sub" id="yoy-y3-sub">—</div>
+      <div class="yoy-card-bar"><div class="yoy-card-bar-fill y3" id="yoy-y3-bar" style="width:0%"></div></div>
     </div>
-    <div class="yoy-col">
-      <div class="yoy-period">Y2→Y3 Growth</div>
-      <div class="yoy-amount growth" id="yoy-growth">—</div>
-      <div class="yoy-sub" id="yoy-growth-sub">—</div>
+  </div>
+
+  <!-- Bottom row: metrics -->
+  <div class="yoy-metrics">
+    <div class="yoy-metric">
+      <div class="yoy-metric-label">Y1 → Y2 Growth</div>
+      <div class="yoy-metric-val green" id="yoy-y1y2-growth">—</div>
+      <div class="yoy-metric-sub" id="yoy-y1y2-sub">—</div>
     </div>
-    <div class="yoy-col">
-      <div class="yoy-period">Total (All Time)</div>
-      <div class="yoy-amount" style="color:var(--text)" id="yoy-total">—</div>
-      <div class="yoy-sub" id="yoy-total-sub">—</div>
+    <div class="yoy-metric">
+      <div class="yoy-metric-label">Y3 Daily Pace vs Y2</div>
+      <div class="yoy-metric-val" id="yoy-growth">—</div>
+      <div class="yoy-metric-sub" id="yoy-growth-sub">—</div>
+    </div>
+    <div class="yoy-metric">
+      <div class="yoy-metric-label">All-Time Revenue</div>
+      <div class="yoy-metric-val brass" id="yoy-total">—</div>
+      <div class="yoy-metric-sub" id="yoy-total-sub">—</div>
+    </div>
+    <div class="yoy-metric">
+      <div class="yoy-metric-label">All-Time Guests</div>
+      <div class="yoy-metric-val blue" id="yoy-guests-total">—</div>
+      <div class="yoy-metric-sub" id="yoy-guests-sub">—</div>
+    </div>
+    <div class="yoy-metric">
+      <div class="yoy-metric-label">All-Time Orders</div>
+      <div class="yoy-metric-val" id="yoy-orders-total">—</div>
+      <div class="yoy-metric-sub" id="yoy-orders-sub">—</div>
     </div>
   </div>
   <div class="section-label">Key Performance Indicators</div>
@@ -900,17 +945,41 @@ function buildDashboard(D) {
   document.getElementById('footer-range').textContent = `DATA: ${fmt(minDate)} — ${fmt(maxDate)}`;
 
   // ── YOY Banner ──────────────────────────────
+  // Year cards
   document.getElementById('yoy-y1-sales').textContent = '$' + y1s.toLocaleString('en-US',{maximumFractionDigits:0});
-  document.getElementById('yoy-y1-sub').textContent = `${y1o.toLocaleString()} orders · ${y1g.toLocaleString()} guests`;
+  document.getElementById('yoy-y1-sub').textContent = y1o.toLocaleString() + ' orders · ' + y1g.toLocaleString() + ' guests · ' + y1.length + ' days';
   document.getElementById('yoy-y2-sales').textContent = '$' + y2s.toLocaleString('en-US',{maximumFractionDigits:0});
-  document.getElementById('yoy-y2-sub').textContent = `${y2o.toLocaleString()} orders · ${y2g.toLocaleString()} guests`;
+  document.getElementById('yoy-y2-sub').textContent = y2o.toLocaleString() + ' orders · ' + y2g.toLocaleString() + ' guests · ' + y2.length + ' days';
   document.getElementById('yoy-y3-sales').textContent = y3s > 0 ? '$' + y3s.toLocaleString('en-US',{maximumFractionDigits:0}) : 'In progress';
-  document.getElementById('yoy-y3-sub').textContent = y3o > 0 ? `${y3o.toLocaleString()} orders · ${y3.length} days` : '—';
-  const growth23 = y2s > 0 ? ((y3s / (y2s/12*y3.length))-1)*100 : 0; // pace-adjusted
-  document.getElementById('yoy-growth').textContent = y3s > 0 ? (growth23>0?'+':'') + growth23.toFixed(1) + '% pace' : (growth>0?'+':'') + growth.toFixed(1) + '%';
-  document.getElementById('yoy-growth-sub').textContent = y3s > 0 ? 'Y3 vs Y2 daily avg pace' : (growth>0?'+':'')+' $'+ Math.abs(y2s-y1s).toLocaleString('en-US',{maximumFractionDigits:0}) + ' net sales';
+  document.getElementById('yoy-y3-sub').textContent = y3.length > 0 ? y3o.toLocaleString() + ' orders · ' + y3g.toLocaleString() + ' guests · ' + y3.length + ' days' : '—';
+
+  // Progress bars — relative to Y2 as baseline
+  const maxY = Math.max(y1s, y2s, y3s);
+  document.getElementById('yoy-y1-bar').style.width = (y1s/maxY*100).toFixed(1) + '%';
+  document.getElementById('yoy-y2-bar').style.width = (y2s/maxY*100).toFixed(1) + '%';
+  if(y3s > 0) document.getElementById('yoy-y3-bar').style.width = (y3s/maxY*100).toFixed(1) + '%';
+
+  // Y1→Y2 growth
+  const y1y2growth = y1s > 0 ? ((y2s/y1s)-1)*100 : 0;
+  document.getElementById('yoy-y1y2-growth').textContent = (y1y2growth>0?'+':'') + y1y2growth.toFixed(1) + '%';
+  document.getElementById('yoy-y1y2-sub').textContent = (y2s-y1s>0?'+':'-') + ' $' + Math.abs(y2s-y1s).toLocaleString('en-US',{maximumFractionDigits:0});
+
+  // Y3 pace vs Y2 daily avg
+  const y2daily = y2.length > 0 ? y2s/y2.length : 0;
+  const y3daily = y3.length > 0 ? y3s/y3.length : 0;
+  const pacePct = y2daily > 0 ? ((y3daily/y2daily)-1)*100 : 0;
+  const paceEl = document.getElementById('yoy-growth');
+  paceEl.textContent = y3.length > 0 ? (pacePct>0?'+':'') + pacePct.toFixed(1) + '%' : '—';
+  paceEl.style.color = pacePct >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('yoy-growth-sub').textContent = y3.length > 0 ? '$' + Math.round(y3daily).toLocaleString() + '/day vs $' + Math.round(y2daily).toLocaleString() + ' Y2 avg' : 'Not enough data';
+
+  // Totals
   document.getElementById('yoy-total').textContent = '$' + totalSales.toLocaleString('en-US',{maximumFractionDigits:0});
-  document.getElementById('yoy-total-sub').textContent = `${(y1o+y2o).toLocaleString()} orders · ${(y1g+y2g).toLocaleString()} guests`;
+  document.getElementById('yoy-total-sub').textContent = (y1o+y2o+y3o).toLocaleString() + ' orders all time';
+  document.getElementById('yoy-guests-total').textContent = (y1g+y2g+y3g).toLocaleString();
+  document.getElementById('yoy-guests-sub').textContent = 'lifetime guests';
+  document.getElementById('yoy-orders-total').textContent = (y1o+y2o+y3o).toLocaleString();
+  document.getElementById('yoy-orders-sub').textContent = 'lifetime orders';
   document.getElementById('rev-total').textContent = '$' + totalSales.toLocaleString('en-US',{maximumFractionDigits:0});
 
   // ── KPI Cards ───────────────────────────────
