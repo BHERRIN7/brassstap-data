@@ -191,8 +191,16 @@ dropZone.addEventListener('drop', e => {
 function handleFiles(files) {
   for(const f of files) {
     if(!f.name.endsWith('.csv') && !f.name.endsWith('.html')) continue;
-    if(!selectedFiles.find(x => x.name === f.name)) {
-      selectedFiles.push(f);
+    // Normalize HTML filenames — strip version numbers and spaces
+    let normalizedName = f.name;
+    if(f.name.endsWith('.html')) {
+      if(f.name.toLowerCase().includes('index')) normalizedName = 'index.html';
+      else if(f.name.toLowerCase().includes('uploader')) normalizedName = 'brasstap_uploader.html';
+    }
+    // Create a new file object with the normalized name
+    const normalized = new File([f], normalizedName, {type: f.type});
+    if(!selectedFiles.find(x => x.name === normalizedName)) {
+      selectedFiles.push(normalized);
     }
   }
   renderFileList();
