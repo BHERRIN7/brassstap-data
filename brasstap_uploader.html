@@ -105,11 +105,11 @@ input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
   <div class="card-title">Drop CSV Files</div>
 
   <div class="drop-zone" id="drop-zone">
-    <input type="file" id="file-input" multiple accept=".csv" onchange="handleFiles(this.files)">
+    <input type="file" id="file-input" multiple accept=".csv,.html" onchange="handleFiles(this.files)">
     <div class="drop-zone-icon">📂</div>
     <div class="drop-zone-text">
       <strong>Drag & drop your Toast CSV exports here</strong><br>
-      or click to browse · accepts multiple files at once
+      Also accepts index.html and brasstap_uploader.html · multiple files at once
     </div>
   </div>
 
@@ -129,16 +129,7 @@ input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
   </button>
 </div>
 
-<!-- OPTIONAL FILES -->
-<div class="card">
-  <div class="card-title">Optional — Dashboard Files</div>
-  <label>New index.html <span style="color:var(--text-dim);font-weight:normal">(leave blank to skip)</span></label>
-  <input type="file" id="index-file-input" accept=".html" style="background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:IBM Plex Mono,monospace;font-size:11px;padding:8px;width:100%;margin-bottom:16px;">
-  <label>New uploader (self-update) <span style="color:var(--text-dim);font-weight:normal">(leave blank to skip)</span></label>
-  <input type="file" id="self-file-input" accept=".html" style="background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:IBM Plex Mono,monospace;font-size:11px;padding:8px;width:100%;margin-bottom:0;">
 
-  <div class="log" id="log" style="display:none"></div>
-</div>
 
 <script>
 const STORAGE_KEY = 'brasstrap_uploader_settings';
@@ -199,7 +190,7 @@ dropZone.addEventListener('drop', e => {
 
 function handleFiles(files) {
   for(const f of files) {
-    if(!f.name.endsWith('.csv')) continue;
+    if(!f.name.endsWith('.csv') && !f.name.endsWith('.html')) continue;
     if(!selectedFiles.find(x => x.name === f.name)) {
       selectedFiles.push(f);
     }
@@ -361,7 +352,13 @@ async function startUpload() {
         reader.readAsBinaryString(file);
       });
 
-      const path = `${folder}/${file.name}`;
+      // Route HTML files to repo root, CSVs to data folder
+      let path;
+      if(file.name.endsWith('.html')) {
+        path = file.name; // root of repo
+      } else {
+        path = `${folder}/${file.name}`;
+      }
       const sha = await getFileSHA(repo, path);
       await uploadFile(repo, path, base64, sha);
 
@@ -376,44 +373,6 @@ async function startUpload() {
 
     done++;
     document.getElementById('progress-fill').style.width = (done / selectedFiles.length * 80) + '%';
-  }
-
-  // Upload index.html if provided
-  const indexFile = document.getElementById('index-file-input').files[0];
-  if(indexFile) {
-    log('Uploading index.html…', 'info');
-    try {
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(btoa(e.target.result));
-        reader.onerror = reject;
-        reader.readAsBinaryString(indexFile);
-      });
-      const sha = await getFileSHA(repo, 'index.html');
-      await uploadFile(repo, 'index.html', base64, sha);
-      log('✓ index.html updated', 'success');
-    } catch(e) {
-      log('✗ index.html failed: ' + e.message, 'error');
-    }
-  }
-
-  // Self-update the uploader if provided
-  const selfFile = document.getElementById('self-file-input').files[0];
-  if(selfFile) {
-    log('Updating uploader tool…', 'info');
-    try {
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(btoa(e.target.result));
-        reader.onerror = reject;
-        reader.readAsBinaryString(selfFile);
-      });
-      const sha = await getFileSHA(repo, 'brasstap_uploader.html');
-      await uploadFile(repo, 'brasstap_uploader.html', base64, sha);
-      log('✓ Uploader tool updated on GitHub', 'success');
-    } catch(e) {
-      log('✗ Uploader self-update failed: ' + e.message, 'error');
-    }
   }
 
   // Create release tag
