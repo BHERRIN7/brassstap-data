@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="uploader-version" content="2.1.0">
+<meta name="uploader-version" content="2.3.0">
 <title>Brass Tap Marietta — Dashboard Updater</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -132,7 +132,7 @@ table.vr select{margin:0;padding:6px 8px;font-size:11px;}
 <div class="card">
   <div class="card-title">Upload</div>
   <label class="check" style="margin-top:0"><input type="checkbox" id="partial" onchange="refreshButton()"> Add a shorter date range to the existing data</label>
-  <div class="token-note" id="partial-note" style="margin:6px 0 0 22px">Tick this when your Toast export only covers new days (for example Aug 9 to today). <strong>Sales by day</strong> is merged by date, and <strong>Day of week</strong> and <strong>Time of day</strong> totals are added on. Other Toast files are all-time totals, so export those with the full range.</div>
+  <div class="token-note" id="partial-note" style="margin:6px 0 0 22px">Tick this when your Toast export only covers new days (for example Aug 9 to today). Export every report for the same dates. <strong>Sales by day</strong> is merged by date, and every other report's totals are added to what's already there (averages and percentages are re-weighted, not added).</div>
   <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
   <button class="btn" id="upload-btn" onclick="startUpload()" disabled>Upload to GitHub</button>
   <div class="why" id="why"></div>
@@ -469,6 +469,7 @@ async function checkConnection() {
     if (conn.scopeProblem) conn.canPush = false;
     const t = await gh(`/repos/${encPath(repo())}/tags?per_page=100`);
     if (t.ok && Array.isArray(t.data)) conn.latestTag = latestTag(t.data.map(x => x.name));
+    await loadKnownNames();
     const hasIndex = await gh(`/repos/${encPath(repo())}/contents/index.html`);
     let expTxt = '';
     if (exp) {
@@ -519,7 +520,36 @@ function routeHTML(name) {
   return null;
 }
 
+// ── Match dropped CSVs to the dashboard's file names ──────────────
+// Downloads often arrive as "Sales by day (1).csv" or "Sales by day 2026-10-29.csv";
+// they still need to land on the dashboard's own file name.
+let KNOWN_CSV = new Set(["Cash activity.csv", "Cash summary.csv", "Check Discounts.csv", "Day of week (totals).csv", "Deferred summary.csv", "Dining options summary.csv", "Menu Item Discounts.csv", "Menu Item by Sales Category.csv", "Metric highlight.csv", "Net sales summary.csv", "Payments summary.csv", "Revenue center summary.csv", "Revenue summary.csv", "Sales Category Sales.csv", "Sales by day.csv", "Sales category summary.csv", "Service Daypart summary.csv", "Service charge summary.csv", "Service mode summary.csv", "Tax summary.csv", "Time of day (totals).csv", "Tip summary.csv", "Top Items.csv", "Top Modifiers.csv", "Top Sales Categories.csv", "Unpaid orders summary.csv", "Void summary.csv", "Draft variance daily.csv", "Draft variance by tap.csv"]);
+function cleanName(n) {
+  return n.replace(/\.csv$/i, '')
+    .replace(/\s*\(\d+\)\s*$/, '').replace(/\s*-\s*copy(\s*\d+)?$/i, '').replace(/\s+copy$/i, '')
+    .replace(/[\s_-]*\d{4}[-_.]?\d{2}[-_.]?\d{2}([\s_-]*(to|-|_)[\s_-]*\d{4}[-_.]?\d{2}[-_.]?\d{2})?$/i, '')
+    .replace(/[\s_-]*\d{1,2}[-_.]\d{1,2}[-_.]\d{2,4}$/, '')
+    .replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+function matchCSV(name) {
+  const c = cleanName(name);
+  const known = [...KNOWN_CSV];
+  const exact = known.find(k => cleanName(k) === c);
+  if (exact) return { name: exact, how: exact === name ? 'same' : 'renamed' };
+  let best = null, bs = 0, second = 0;
+  known.forEach(k => { const s = VarianceCore.score(c, cleanName(k)); if (s > bs) { second = bs; bs = s; best = k; } else if (s > second) second = s; });
+  if (best && bs >= 0.8 && bs - second >= 0.08) return { name: best, how: 'renamed' };
+  return { name, how: 'new' };
+}
+async function loadKnownNames() {
+  try {
+    const r = await gh(`/repos/${encPath(repo())}/contents/${encPath(folder())}`);
+    if (r.ok && Array.isArray(r.data)) r.data.forEach(f => { if (/\.csv$/i.test(f.name)) KNOWN_CSV.add(f.name); });
+  } catch (e) {}
+}
+
 async function handleFiles(files) {
+  files = [...files];   // the picker clears its list right away, so copy it before any await
   const pdfs = [];
   for (const f of files) {
     const l = f.name.toLowerCase();
@@ -534,17 +564,22 @@ async function handleFiles(files) {
           if (!confirm(`"${f.name}" doesn't look like the Brass Tap dashboard (its title is "${title || 'blank'}").\n\nUploading it will replace the live dashboard page. Continue?`)) continue;
         }
       }
-      addFile(f, dest, dest, 'root');
+      await addFile(f, dest, dest, 'root');
       continue;
     }
-    if (l.endsWith('.csv')) addFile(f, f.name, `${folder()}/${f.name}`, 'data');
+    if (l.endsWith('.csv')) { const m = matchCSV(f.name); await addFile(f, m.name, `${folder()}/${m.name}`, 'data', m.how === 'renamed' ? f.name : null, m.how === 'new'); }
   }
   if (pdfs.length) await readPDFs(pdfs);
   renderList();
 }
-function addFile(file, name, dest, kind) {
+// Copy each file into memory as it's dropped, so a later download that overwrites
+// the same file on disk can't break the upload.
+async function addFile(file, name, dest, kind, from = null, isNew = false) {
+  let copy;
+  try { copy = new File([await file.arrayBuffer()], file.name, { type: file.type }); }
+  catch (e) { alert(`Couldn't read "${file.name}". It may have been moved or replaced since you picked it; drop it in again.`); return; }
   selectedFiles = selectedFiles.filter(x => x.dest !== dest);
-  selectedFiles.push({ file, name, dest, kind });
+  selectedFiles.push({ file: copy, name, dest, kind, from, isNew });
 }
 function removeFile(i) {
   const f = selectedFiles[i];
@@ -560,7 +595,8 @@ function renderList() {
     const i = f.kind === 'variance' ? selectedFiles.findIndex(x => x.kind === 'variance') : selectedFiles.indexOf(f);
     const row = document.createElement('div'); row.className = 'file-item';
     const n = document.createElement('span'); n.className = 'fname'; n.textContent = f.name;
-    const d = document.createElement('span'); d.className = 'dest'; d.textContent = '→ ' + (f.kind === 'root' ? 'repo root' : f.dest); n.append(d);
+    if (f.from) { n.textContent = f.from; }
+    const d = document.createElement('span'); d.className = 'dest'; d.textContent = '→ ' + (f.kind === 'root' ? 'repo root' : f.dest) + (f.isNew ? '  (new file — no match in the dashboard)' : ''); n.append(d);
     const right = document.createElement('span');
     const st = document.createElement('span'); st.className = 'status pending'; st.dataset.dest = f.kind === 'variance' ? '__variance__' : f.dest; st.textContent = 'ready';
     const x = document.createElement('button'); x.className = 'x-btn'; x.title = 'Remove'; x.textContent = '×';
@@ -740,53 +776,117 @@ const TOTALS = { 'Day of week (totals).csv': 'Day of week', 'Time of day (totals
 const dataFiles = () => selectedFiles.filter(f => f.kind === 'data');
 function partialProblem() {
   const names = dataFiles().map(f => f.name);
-  const other = names.filter(n => n !== DAILY && !TOTALS[n]);
-  if (other.length) return `With "shorter date range" ticked, only Sales by day, Day of week and Time of day can be added. Remove ${other.length === 1 ? '"' + other[0] + '"' : other.length + ' other files'} or untick the box.`;
-  if (names.some(n => TOTALS[n]) && !names.includes(DAILY)) return 'Include the Sales by day export for the same dates. It\'s how the uploader knows which days the totals cover.';
+  if (!names.includes(DAILY)) return 'Include the Sales by day export for the same dates. It tells the uploader which days are new, so nothing gets counted twice.';
   return '';
 }
 const num = v => { const x = parseFloat(String(v ?? '').replace(/[$,]/g, '')); return isNaN(x) ? null : x; };
-function fmtNum(x, like) { if (x == null) return ''; const dec = String(like ?? '').includes('.') ? Math.min(2, (String(like).split('.')[1] || '').length) : (Number.isInteger(x) ? 0 : 2); return x.toFixed(dec); }
+function fmtNum(x, like) { if (x == null) return ''; const r = Math.round(x * 10000) / 10000; return (Number.isInteger(r) && !String(like ?? '').includes('.')) ? String(r) : (Math.abs(r - Math.round(r * 100) / 100) < 1e-9 ? r.toFixed(2) : String(r)); }
 function csvOut(head, rows) { return VarianceCore.toCSV(head, rows); }
 async function readCSV(file) { const t = await file.text(); const rows = VarianceCore.parseCSV(t.replace(/^\uFEFF/, '')); const head = (t.replace(/^\uFEFF/, '').split(/\r?\n/)[0] || '').split(',').map(h => h.replace(/^"|"$/g, '')); return { head, rows }; }
+// How a column combines when a shorter range is added to all-time totals.
+// Sums by default; averages and percentages are re-weighted instead of added.
+const WEIGHTS = {
+  'AVERAGE_ITEM_PRICE': 'ITEM_QUANTITY',
+  'Avg/Guest': 'Total guests', 'Avg/Payment': 'Total payments', 'Avg/Order': 'Total orders',
+  'Turn time (minutes)': 'Total orders', 'Tips/Grat %': 'Amount',
+};
+const IMPLIED = { 'Void amount %': 'Void amount' };   // % of an unstated base: base = numerator / %
+const isAvgCol = h => h in WEIGHTS || h in IMPLIED || /avg|average|%|turn time/i.test(h);
+function keyCols(head, rows) {
+  // first column is always a key (e.g. Hour of day); other text columns join it
+  return head.filter((h, i) => i === 0 || rows.some(r => String(r[h] ?? '').trim() !== '' && num(r[h]) == null));
+}
+// Toast puts an unnamed grand-total row last in some reports; pull it out, merge, rebuild it
+function splitTotal(head, keys, rows) {
+  if (rows.length < 3) return { rows, total: null };
+  const last = rows[rows.length - 1];
+  if (!keys.every(k => String(last[k] ?? '').trim() === '')) return { rows, total: null };
+  const col = head.find(h => !keys.includes(h) && !isAvgCol(h) && num(last[h]) != null);
+  if (!col) return { rows, total: null };
+  const sum = rows.slice(0, -1).reduce((s, r) => s + (num(r[col]) || 0), 0);
+  return Math.abs(sum - num(last[col])) <= Math.max(1, Math.abs(sum) * 0.01) ? { rows: rows.slice(0, -1), total: last } : { rows, total: null };
+}
+function mergeTotals(head, oldRows, addRows) {
+  let keys = keyCols(head, oldRows.concat(addRows));
+  const o = splitTotal(head, keys, oldRows), n = splitTotal(head, keys, addRows);
+  const hadTotal = !!(o.total || n.total);
+  const merged = mergeRows(head, keys, o.rows, n.rows);
+  if (hadTotal) {
+    const t = {}; head.forEach(h => { t[h] = keys.includes(h) ? '' : fmtNum(merged.reduce((s, r) => s + (num(r[h]) || 0), 0), (o.total || n.total)[h]); });
+    merged.push(t);
+  }
+  return merged;
+}
+function mergeRows(head, keys, oldRows, addRows) {
+  // single-row summaries (Net sales summary, Tip summary…) have no key: line rows up by position
+  const allNumeric = keys.length === 1 && oldRows.concat(addRows).every(r => num(r[keys[0]]) != null || String(r[keys[0]] ?? '') === '');
+  const byPos = allNumeric && oldRows.length <= 3;
+  // repeated names (e.g. a blank-named item) are told apart by how many times they've appeared
+  const keyer = () => { const seen = new Map(); return (r, i) => { if (byPos) return String(i); const b = keys.map(c => String(r[c] ?? '').trim()).join('\u0001'); const n = seen.get(b) || 0; seen.set(b, n + 1); return b + '\u0002' + n; }; };
+  const ko = keyer(), kn = keyer();
+  const out = new Map(oldRows.map((r, i) => [ko(r, i), { ...r }]));
+  addRows.forEach((r, i) => {
+    const key = kn(r, i), base = out.get(key);
+    if (!base) { out.set(key, { ...r }); return; }
+    const merged = { ...base };
+    head.forEach(h => {
+      if (!byPos && keys.includes(h)) return;
+      if (isAvgCol(h)) return;
+      const a = num(base[h]), b = num(r[h]);
+      if (a != null || b != null) merged[h] = fmtNum((a || 0) + (b || 0), base[h] || r[h]);
+    });
+    head.filter(isAvgCol).forEach(h => {
+      const a = num(base[h]), b = num(r[h]);
+      if (b == null) return; if (a == null) { merged[h] = r[h]; return; }
+      let wa, wb;
+      if (WEIGHTS[h] && head.includes(WEIGHTS[h])) { wa = num(base[WEIGHTS[h]]) || 0; wb = num(r[WEIGHTS[h]]) || 0; }
+      else if (IMPLIED[h] && head.includes(IMPLIED[h])) { wa = a ? (num(base[IMPLIED[h]]) || 0) / a : 0; wb = b ? (num(r[IMPLIED[h]]) || 0) / b : 0; }
+      else { wa = 1; wb = 1; }
+      merged[h] = wa + wb ? fmtNum((a * wa + b * wb) / (wa + wb), base[h]) : base[h];
+    });
+    out.set(key, merged);
+  });
+  return [...out.values()];
+}
+const isVarianceFile = n => /^draft variance/i.test(n);
 async function buildPartialJobs() {
-  const files = Object.fromEntries(dataFiles().map(f => [f.name, f]));
+  const all = dataFiles();
+  const files = Object.fromEntries(all.map(f => [f.name, f]));
   const dailyNew = await readCSV(files[DAILY].file);
   const dKey = dailyNew.head[0];
   const newDays = dailyNew.rows.filter(r => /^\d{8}$/.test(r[dKey]));
   if (!newDays.length) throw new Error('The Sales by day file has no dates in it.');
-  const first = newDays.map(r => r[dKey]).sort()[0], last = newDays.map(r => r[dKey]).sort().pop();
+  const sorted = newDays.map(r => r[dKey]).sort(), first = sorted[0], last = sorted[sorted.length - 1];
   const pretty = d => `${d.slice(4, 6)}/${d.slice(6)}/${d.slice(0, 4)}`;
   const oldText = await fetchRepoText(`${folder()}/${DAILY}`);
   if (oldText == null) throw new Error('There\'s no Sales by day in the repo yet, so upload the full range the first time.');
-  const oldRows = VarianceCore.parseCSV(oldText.replace(/^\uFEFF/, ''));
+  const oldRows = VarianceCore.parseCSV(oldText.replace(/^﻿/, ''));
   const oldDates = new Set(oldRows.map(r => r[dKey]));
+  const lastOld = [...oldDates].filter(d => /^\d{8}$/.test(d)).sort().pop();
   const overlap = newDays.filter(r => oldDates.has(r[dKey])).length;
-  log(`Sales by day: new file covers ${pretty(first)}–${pretty(last)} (${newDays.length} days); ${overlap} of those days were already there and will be replaced.`, 'info');
-  const newSet = new Set(newDays.map(r => r[dKey]));
+  const totalsFiles = all.filter(f => f.name !== DAILY && !isVarianceFile(f.name));
+  if (overlap && totalsFiles.length) throw new Error(`${overlap} of the days in your export (${pretty(first)}–${pretty(last)}) are already in the dashboard, so adding the other files would count them twice. Export starting ${pretty(String(+lastOld + 1).length === 8 ? nextDay(lastOld) : lastOld)}.`);
+  log(`Adding ${pretty(first)}–${pretty(last)} (${newDays.length} days) to data through ${pretty(lastOld)}.`, 'info');
+  const newSet = new Set(sorted);
   const merged = oldRows.filter(r => !newSet.has(r[dKey])).concat(newDays).sort((a, b) => String(a[dKey]).localeCompare(String(b[dKey])));
   const jobs = [{ name: DAILY, dest: `${folder()}/${DAILY}`, statusKey: files[DAILY].dest, text: csvOut(dailyNew.head, merged) }];
   const newNet = newDays.reduce((s, r) => s + (num(r['Net sales']) || 0), 0);
-  for (const [name, key] of Object.entries(TOTALS)) {
-    if (!files[name]) continue;
-    if (overlap) throw new Error(`${name} can't be added: ${overlap} of its days are already counted in the dashboard, so adding would count them twice. Export starting the day after ${pretty([...oldDates].filter(d => /^\d{8}$/.test(d)).sort().pop())}, or upload ${name} for the full range with the box unticked.`);
-    const add = await readCSV(files[name].file);
-    const addNet = add.rows.reduce((s, r) => s + (num(r['Net sales']) || 0), 0);
-    if (Math.abs(addNet - newNet) > Math.max(1, newNet * 0.002)) throw new Error(`${name} adds up to $${addNet.toFixed(2)}, but Sales by day for these dates is $${newNet.toFixed(2)}. They need to be exported for the same date range.`);
-    const cur = await fetchRepoText(`${folder()}/${name}`);
-    const curP = cur ? VarianceCore.parseCSV(cur.replace(/^\uFEFF/, '')) : [];
-    const head = add.head;
-    const byKey = new Map(curP.map(r => [String(r[key]), { ...r }]));
-    add.rows.forEach(r => {
-      const k = String(r[key]); const base = byKey.get(k);
-      if (!base) { byKey.set(k, { ...r }); return; }
-      head.forEach(h => { if (h === key) return; const a = num(base[h]), b = num(r[h]); if (a != null || b != null) base[h] = fmtNum((a || 0) + (b || 0), base[h] || r[h]); });
-    });
-    jobs.push({ name, dest: `${folder()}/${name}`, statusKey: files[name].dest, text: csvOut(head, [...byKey.values()]) });
-    log(`${name}: added $${addNet.toFixed(2)} for ${pretty(first)}–${pretty(last)} to the existing totals.`, 'info');
+  for (const f of totalsFiles) {
+    const add = await readCSV(f.file);
+    if (add.head.includes('Net sales') && /day of week|time of day|net sales summary/i.test(f.name)) {
+      const addNet = add.rows.reduce((s, r) => s + (num(r['Net sales']) || 0), 0);
+      if (Math.abs(addNet - newNet) > Math.max(1, newNet * 0.002)) throw new Error(`${f.name} adds up to $${addNet.toFixed(2)}, but Sales by day for these dates is $${newNet.toFixed(2)}. Export every file for the same date range.`);
+    }
+    const cur = await fetchRepoText(`${folder()}/${f.name}`);
+    if (cur == null) { jobs.push({ name: f.name, dest: f.dest, statusKey: f.dest, text: await f.file.text() }); log(`${f.name}: not in the dashboard yet, uploaded as-is.`, 'warn'); continue; }
+    const curRows = VarianceCore.parseCSV(cur.replace(/^﻿/, ''));
+    jobs.push({ name: f.name, dest: f.dest, statusKey: f.dest, text: csvOut(add.head, mergeTotals(add.head, curRows, add.rows)) });
   }
-  return jobs.map(j => ({ ...j, getB64: async () => b64FromBytes(new TextEncoder().encode(j.text)) }));
+  all.filter(f => isVarianceFile(f.name)).forEach(f => jobs.push({ name: f.name, dest: f.dest, statusKey: f.dest, text: null, file: f.file }));
+  log(`Added the new dates to ${totalsFiles.length} total file(s).`, 'info');
+  return jobs.map(j => ({ ...j, getB64: async () => j.file ? b64FromBytes(new Uint8Array(await j.file.arrayBuffer())) : b64FromBytes(new TextEncoder().encode(j.text)) }));
 }
+function nextDay(d) { const t = new Date(Date.UTC(+d.slice(0, 4), +d.slice(4, 6) - 1, +d.slice(6) + 1)); return t.toISOString().slice(0, 10).replace(/-/g, ''); }
 
 async function startUpload() {
   if ($('upload-btn').disabled) return;
@@ -827,7 +927,8 @@ async function startUpload() {
       if (j.statusKey !== '__variance__' || j.name.includes('by tap')) setStatus(j.statusKey, 'done', '✓ done');
     } catch (e) {
       failed++; setStatus(j.statusKey, 'error', '✗ error');
-      log(`✗ ${j.name}: ${e.message}`, 'error');
+      const msg = e.name === 'NotFoundError' || /could not be found at the time/i.test(e.message) ? 'this file changed on your computer after you dropped it in. Click Clear Files, drop it in again, and upload.' : e.message;
+      log(`✗ ${j.name}: ${msg}`, 'error');
       if (e.stop) { log('Stopped before the other files: fix the token above and upload again. Nothing else was changed.', 'error'); break; }
     }
     done++; $('prog-fill').style.width = (done / jobs.length * 90) + '%';
@@ -839,7 +940,7 @@ async function startUpload() {
   $('prog-fill').style.width = '100%';
   if (!failed) log(`Done. The dashboard picks this up at ${repo().split('/')[0].toLowerCase()}.github.io/${repo().split('/')[1]}/ within a couple of minutes.`, 'success');
   else log(`${failed} file(s) failed. Fix the issue above and upload again; files that worked are already saved.`, 'warn');
-  if (jobs.some(j => j.dest === 'brasstap_uploader.html')) log('The updater itself was replaced. Reload this page to use the new version.', 'info');
+  if (!failed && jobs.some(j => j.dest === 'brasstap_uploader.html')) log('The updater itself was replaced. Reload this page to use the new version.', 'info');
   $('clear-btn').disabled = false; refreshButton();
 }
 
