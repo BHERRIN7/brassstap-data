@@ -1,4 +1,6 @@
-Service charge,Count,Amount
-18% Auto-Grat,10,109.48
-18% Gratuity,608,5969.12
-Total,618,6078.60
+Amount,Service charge,Count
+109.48,18% Auto-Grat,10
+5969.12,18% Gratuity,608
+6078.60,Total,618
+1172.57,18% Gratuity,117
+1172.57,Total,117
