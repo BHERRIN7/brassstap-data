@@ -3,322 +3,779 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="uploader-version" content="2.0.0">
 <title>Brass Tap Marietta — Dashboard Updater</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --brass:#B8860B; --brass-light:#D4A017; --dark:#0E0E0E; --dark-2:#161616;
   --dark-3:#1E1E1E; --dark-4:#272727; --border:#2E2E2E; --text:#E8E0D0;
-  --text-dim:#555050; --text-muted:#8A8070; --green:#4CAF50; --red:#E53935; --amber:#FF8F00;
+  --text-dim:#6A6460; --text-muted:#8A8070; --green:#4CAF50; --red:#E53935; --amber:#FF8F00;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--dark);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 20px;}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;margin-bottom:4px;}
 .logo span{color:var(--brass);}
-.subtitle{font-size:10px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:40px;}
-.card{background:var(--dark-2);border:1px solid var(--border);padding:28px;width:100%;max-width:620px;margin-bottom:20px;}
-.card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--brass);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.subtitle{font-size:10px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px;}
+.update-banner{display:none;width:100%;max-width:720px;margin-bottom:20px;padding:12px 16px;border:1px solid var(--amber);background:rgba(255,143,0,0.08);font-size:11px;color:var(--amber);}
+.update-banner button{margin-left:10px;background:var(--amber);color:var(--dark);border:none;padding:4px 10px;font-family:inherit;font-size:10px;cursor:pointer;font-weight:600;}
+.card{background:var(--dark-2);border:1px solid var(--border);padding:28px;width:100%;max-width:720px;margin-bottom:20px;}
+.card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--brass);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;}
 label{display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
-input[type=text],input[type=password]{width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 12px;margin-bottom:16px;outline:none;}
-input[type=text]:focus,input[type=password]:focus{border-color:var(--brass);}
-.drop-zone{border:2px dashed var(--border);padding:40px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;}
+input[type=text],input[type=password],select{width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 12px;margin-bottom:16px;outline:none;}
+input:focus,select:focus{border-color:var(--brass);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:560px){.row2{grid-template-columns:1fr;}}
+.conn{display:flex;align-items:center;gap:10px;font-size:11px;padding:10px 12px;background:var(--dark-3);border:1px solid var(--border);}
+.conn .dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);flex-shrink:0;}
+.conn.ok .dot{background:var(--green);} .conn.bad .dot{background:var(--red);} .conn.warn .dot{background:var(--amber);}
+.conn .msg{flex:1;color:var(--text-muted);line-height:1.6;}
+.conn.ok .msg strong{color:var(--green);} .conn.bad .msg strong{color:var(--red);} .conn.warn .msg strong{color:var(--amber);}
+.mini-btn{background:var(--dark-4);color:var(--text-muted);border:1px solid var(--border);font-family:inherit;font-size:10px;padding:5px 10px;cursor:pointer;white-space:nowrap;}
+.mini-btn:hover{color:var(--text);}
+.token-note{font-size:9px;color:var(--text-dim);line-height:1.8;margin:-8px 0 16px;}
+.token-note a{color:var(--brass);text-decoration:none;}
+.check{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-muted);margin-top:14px;}
+.check input{accent-color:var(--brass);}
+.drop-zone{border:2px dashed var(--border);padding:36px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;}
 .drop-zone.drag-over{border-color:var(--brass);background:rgba(184,134,11,0.05);}
-.drop-zone-icon{font-size:32px;margin-bottom:12px;opacity:0.4;}
 .drop-zone-text{font-size:11px;color:var(--text-muted);line-height:2;}
 .drop-zone-text strong{color:var(--brass-light);}
 input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.expected{margin-top:12px;font-size:9px;color:var(--text-dim);line-height:1.9;}
+.expected span{color:var(--text-muted);}
 .file-list{margin-top:16px;}
-.file-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);margin-bottom:4px;font-size:11px;}
-.file-item .fname{color:var(--text-muted);}
-.status{font-size:10px;}
-.status.pending{color:var(--text-dim);}
-.status.uploading{color:var(--amber);}
-.status.done{color:var(--green);}
-.status.error{color:var(--red);}
+.file-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);margin-bottom:4px;font-size:11px;}
+.file-item .fname{color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;}
+.file-item .dest{color:var(--text-dim);font-size:10px;margin-left:6px;}
+.status{font-size:10px;white-space:nowrap;}
+.status.pending{color:var(--text-dim);} .status.uploading{color:var(--amber);} .status.done{color:var(--green);} .status.error{color:var(--red);}
+.x-btn{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;padding:0 4px;}
+.x-btn:hover{color:var(--red);}
 .btn{width:100%;background:var(--brass);color:var(--dark);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;border:none;padding:14px;cursor:pointer;margin-top:12px;font-weight:600;transition:background 0.2s;}
 .btn:hover{background:var(--brass-light);}
 .btn:disabled{background:var(--dark-4);color:var(--text-dim);cursor:not-allowed;}
 .btn-secondary{background:var(--dark-3);color:var(--text-muted);border:1px solid var(--border);}
 .btn-secondary:hover{background:var(--dark-4);color:var(--text);}
-.log-box{background:var(--dark-3);border:1px solid var(--border);padding:16px;font-size:10px;line-height:2;max-height:200px;overflow-y:auto;margin-top:16px;display:none;}
+.why{font-size:10px;color:var(--text-dim);margin-top:8px;min-height:14px;}
+.log-box{background:var(--dark-3);border:1px solid var(--border);padding:16px;font-size:10px;line-height:2;max-height:240px;overflow-y:auto;margin-top:16px;display:none;}
 .log-line{display:flex;gap:10px;}
 .log-time{color:var(--text-dim);flex-shrink:0;}
 .log-msg{color:var(--text-muted);}
-.log-msg.success{color:var(--green);}
-.log-msg.error{color:var(--red);}
-.log-msg.info{color:var(--brass-light);}
+.log-msg.success{color:var(--green);} .log-msg.error{color:var(--red);} .log-msg.info{color:var(--brass-light);} .log-msg.warn{color:var(--amber);}
 .prog-track{height:3px;background:var(--dark-4);margin-top:16px;}
 .prog-fill{height:100%;background:var(--brass);width:0%;transition:width 0.3s;}
-.token-note{font-size:9px;color:var(--text-dim);line-height:1.8;margin-top:8px;}
-.token-note a{color:var(--brass);text-decoration:none;}
-.saved-badge{display:inline-block;background:rgba(76,175,80,0.15);color:var(--green);font-size:9px;padding:2px 8px;margin-left:8px;}
-.tag-row{display:flex;align-items:center;gap:10px;margin-top:6px;}
-.tag-big{font-size:20px;font-family:'Bebas Neue',sans-serif;color:var(--brass-light);}
-.tag-input{width:100px;margin-bottom:0!important;}
-.expected{margin-top:12px;font-size:9px;color:var(--text-dim);line-height:1.9;}
-.expected span{color:var(--text-muted);}
+/* variance review */
+#variance-card{display:none;}
+.vr-sub{font-size:10px;color:var(--text-dim);line-height:1.8;margin-bottom:14px;}
+table.vr{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:18px;}
+table.vr th{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);font-weight:400;}
+table.vr td{padding:7px 8px;border-bottom:1px solid rgba(46,46,46,0.6);vertical-align:middle;}
+table.vr td.num{text-align:right;white-space:nowrap;}
+table.vr select{margin:0;padding:6px 8px;font-size:11px;}
+.ok-t{color:var(--green);} .bad-t{color:var(--red);} .warn-t{color:var(--amber);}
+.hint{display:block;font-size:9px;color:var(--text-dim);margin-top:3px;}
+.pill{display:inline-block;font-size:9px;padding:1px 6px;border:1px solid var(--border);color:var(--text-dim);margin-left:6px;}
+.pill.check{border-color:var(--amber);color:var(--amber);}
+.toggle-all{background:none;border:none;color:var(--brass);font-family:inherit;font-size:10px;cursor:pointer;text-decoration:underline;padding:0;}
+.footer-note{font-size:9px;color:var(--text-dim);margin-top:8px;}
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div class="logo">THE BRASS TAP <span>MARIETTA</span></div>
-<div class="subtitle">Dashboard Updater · Store 188</div>
+<div class="subtitle">Dashboard Updater · Store 188 · v<span id="ver">—</span></div>
+<div class="update-banner" id="update-banner">A newer updater (v<span id="new-ver"></span>) is in the repo.<button onclick="location.reload(true)">Reload</button></div>
 
 <!-- SETTINGS -->
 <div class="card">
   <div class="card-title">GitHub Settings</div>
-  <label>Personal Access Token <span id="token-badge"></span></label>
-  <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveSettings()">
-  <div class="token-note">Generate at <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a> → select <strong>repo</strong> scope. Saved in your browser only.</div>
-  <div style="margin-top:16px">
-    <label>Repository</label>
-    <input type="text" id="gh-repo" value="BHERRIN7/brassstap-data" oninput="saveSettings()">
+  <label>Personal Access Token</label>
+  <input type="password" id="gh-token" placeholder="ghp_… or github_pat_…" oninput="saveSettings(); scheduleCheck()">
+  <div class="token-note">Make one at <a href="https://github.com/settings/tokens/new?scopes=repo&description=Brass%20Tap%20updater" target="_blank" rel="noopener">github.com/settings/tokens/new</a> with <strong>repo</strong> scope. Pick a long expiration or none, since an expired token is the usual reason uploads stop working. It's saved in this browser only.</div>
+  <div class="row2">
+    <div><label>Repository</label><input type="text" id="gh-repo" value="BHERRIN7/brassstap-data" oninput="saveSettings(); scheduleCheck()"></div>
+    <div><label>Data folder</label><input type="text" id="gh-folder" value="data" oninput="saveSettings()"></div>
   </div>
-  <div>
-    <label>Data folder</label>
-    <input type="text" id="gh-folder" value="data" oninput="saveSettings()">
-  </div>
-  <div>
-    <label>Current Release Tag</label>
-    <div class="tag-row">
-      <div class="tag-big" id="tag-display">—</div>
-      <input type="text" id="gh-tag" class="tag-input" placeholder="v1.15" oninput="saveSettings()">
-      <span style="font-size:10px;color:var(--text-dim)">→ next: <strong id="next-tag" style="color:var(--brass-light)">—</strong></span>
-    </div>
-  </div>
+  <div class="conn" id="conn"><span class="dot"></span><span class="msg" id="conn-msg">Enter your token to check the connection.</span><button class="mini-btn" onclick="checkConnection()">Test</button></div>
+  <label class="check"><input type="checkbox" id="do-tag" onchange="saveSettings()" checked> Create a release tag after upload <span id="tag-info" style="color:var(--text-dim)"></span></label>
 </div>
 
 <!-- FILE DROP -->
 <div class="card">
   <div class="card-title">Drop Files Here</div>
   <div class="drop-zone" id="drop-zone">
-    <input type="file" id="file-input" multiple accept=".csv,.html" onchange="handleFiles(this.files)">
-    <div class="drop-zone-icon">📂</div>
+    <input type="file" id="file-input" multiple accept=".csv,.html,.pdf" onchange="handleFiles(this.files); this.value=''">
     <div class="drop-zone-text">
-      <strong>Drag & drop Toast CSVs, index.html, or brasstap_uploader.html</strong><br>
-      Files with "index" or "uploader" in the name go to repo root automatically<br>
-      All other files go to the /data/ folder
+      <strong>Toast CSVs · Variance Report PDFs · index.html · brasstap_uploader.html</strong><br>
+      CSVs go to /data/ · PDFs are read here and turned into the two variance CSVs<br>
+      index.html and brasstap_uploader.html go to the repo root
     </div>
   </div>
-  <div class="expected">Expected CSV files: <span>Sales by day · Day of week (totals) · Time of day (totals) · Payments summary · Service mode summary · Service Daypart summary · Net sales summary · Revenue summary · Tip summary · Void summary · Check Discounts · Dining options summary · Sales category summary · Top Items · Top Sales Categories · Menu Item by Sales Category</span></div>
+  <div class="expected">Expected Toast CSVs: <span>Sales by day · Day of week (totals) · Time of day (totals) · Payments summary · Service mode summary · Service Daypart summary · Net sales summary · Revenue summary · Tip summary · Void summary · Check Discounts · Dining options summary · Sales category summary · Top Items · Top Sales Categories · Menu Item by Sales Category</span></div>
   <div class="file-list" id="file-list"></div>
+</div>
+
+<!-- VARIANCE REVIEW -->
+<div class="card" id="variance-card">
+  <div class="card-title"><span>Variance Reports</span><span id="vr-count" style="color:var(--text-dim)"></span></div>
+  <div class="vr-sub">Each report's lines are checked against its own Day Total. Days already in the dashboard are replaced; other days are kept.</div>
+  <table class="vr"><thead><tr><th>Day</th><th class="num">Poured</th><th class="num">Sold</th><th class="num">Slippage</th><th>Check</th></tr></thead><tbody id="vr-days"></tbody></table>
+
+  <div class="card-title" style="margin-top:6px"><span>POS → Tap matches</span><button class="toggle-all" id="vr-toggle" onclick="toggleAllMatches()">Show all</button></div>
+  <div class="vr-sub" id="vr-match-note"></div>
+  <table class="vr"><thead><tr><th>POS item</th><th class="num">Rung</th><th>Tap</th></tr></thead><tbody id="vr-matches"></tbody></table>
+  <div class="footer-note">Your choices are remembered for next time, except Mystery Draft, which is matched by pour timing on every upload because the beer behind it rotates.</div>
+</div>
+
+<!-- UPLOAD -->
+<div class="card">
+  <div class="card-title">Upload</div>
   <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
-  <button class="btn" id="upload-btn" onclick="startUpload()" disabled>Upload to GitHub & Create Release Tag</button>
+  <button class="btn" id="upload-btn" onclick="startUpload()" disabled>Upload to GitHub</button>
+  <div class="why" id="why"></div>
   <button class="btn btn-secondary" id="clear-btn" onclick="clearFiles()" style="margin-top:6px">Clear Files</button>
   <div class="log-box" id="log-box"></div>
 </div>
 
+<script type="module">
+  // pdf.js for reading Variance Report PDFs in the browser
+  const V = '4.10.38';
+  try {
+    const lib = await import(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${V}/build/pdf.min.mjs`);
+    lib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${V}/build/pdf.worker.min.mjs`;
+    window.pdfjsLib = lib;
+  } catch (e) { window.pdfjsLoadError = e; }
+  window.dispatchEvent(new Event('pdfjs-ready'));
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// VARIANCE REPORT CORE — parse Daily Variance Report PDFs (via pdf.js
+// text items) and match POS rings to taps. Pure functions; no DOM.
+// ═══════════════════════════════════════════════════════════════
+(function (root) {
+  const MONTHS = { jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12 };
+  const TIME_RE = /^\d{1,2}:\d{2} [AP]M$/;
+  const OZ_RE = /^(-?[\d.]+) oz$/;
+
+  // pages: array of arrays of {s, x, y} (pdf.js text items, one array per page)
+  function linesFromPages(pages) {
+    const out = [];
+    for (const items of pages) {
+      const its = items.filter(i => i.s && i.s.trim()).map(i => ({ s: i.s.trim(), x: i.x, y: i.y }));
+      its.sort((a, b) => b.y - a.y || a.x - b.x);
+      const lines = [];
+      for (const it of its) {
+        const L = lines.find(l => Math.abs(l.y - it.y) < 2.5);
+        if (L) L.items.push(it); else lines.push({ y: it.y, items: [it] });
+      }
+      lines.sort((a, b) => b.y - a.y);
+      lines.forEach(l => { l.items.sort((a, b) => a.x - b.x); out.push(l.items); });
+    }
+    return out;
+  }
+
+  function minutes(t) {
+    const m = t.match(/^(\d{1,2}):(\d{2}) ([AP])M$/);
+    let h = +m[1] % 12; if (m[3] === 'P') h += 12;
+    // service day runs past midnight: treat 12–5 AM as next-day minutes
+    if (h < 5) h += 24;
+    return h * 60 + +m[2];
+  }
+
+  // Returns {date, weekday, label, pours:[], sales:[], dayTotal:{poured,sold}, slippage, warnings:[]}
+  function parseReport(pages, opts = {}) {
+    const lines = linesFromPages(pages);
+    const res = { date: null, label: '', pours: [], sales: [], dayTotal: null, slippage: null, warnings: [] };
+    let pouredX = null, soldX = null;
+    for (const items of lines) {
+      const text = items.map(i => i.s).join(' ');
+      const hdr = text.match(/Daily Variance Report\s*:\s*(\w+),\s*(\w{3})\w*\s+(\d{1,2})/i);
+      if (hdr && !res.date) {
+        const mon = MONTHS[hdr[2].toLowerCase()], day = +hdr[3];
+        res.label = `${hdr[1]}, ${hdr[2]} ${day}`;
+        res.date = inferDate(mon, day, opts.today || new Date());
+        continue;
+      }
+      const ph = items.find(i => i.s === 'Poured'), sh = items.find(i => i.s === 'Sold');
+      if (ph && sh) { pouredX = ph.x; soldX = sh.x; continue; }
+      const st = text.match(/Slippage Total\s*:\s*\$?\s*(-?\$?[\d,.]+)/i);
+      if (st) { res.slippage = Number(st[1].replace(/[$,]/g, '')); continue; }
+      if (/^Day Total/i.test(text)) {
+        const oz = items.filter(i => OZ_RE.test(i.s)).map(i => Number(i.s.match(OZ_RE)[1]));
+        if (oz.length >= 2) res.dayTotal = { poured: oz[0], sold: oz[1] };
+        continue;
+      }
+      if (items.length < 3 || !TIME_RE.test(items[0].s)) continue;
+      const amt = items[1];
+      const m = amt.s.match(OZ_RE);
+      if (!m) continue;
+      const oz = Number(m[1]);
+      const rest = items.slice(2);
+      const desc = rest.length > 1 ? rest[rest.length - 1].s : '';
+      const name = (rest.length > 1 ? rest.slice(0, -1) : rest).map(i => i.s).join(' ');
+      // column decides poured vs sold; fall back to the item text shape
+      let isSold;
+      if (pouredX != null && soldX != null) isSold = Math.abs(amt.x - soldX) < Math.abs(amt.x - pouredX);
+      else isSold = name.includes('/') || !/^\d{2}$/.test(desc);
+      if (isSold) {
+        const sm = name.match(/^(.+?)\/(.+?) \((\d+)\)$/) || name.match(/^(.+?) \((\d+)\)$/);
+        const item = sm ? sm[1].trim() : name;
+        const size = sm && sm.length === 4 ? sm[2] : 'DRAFT';
+        const qty = sm ? +(sm[sm.length - 1]) : 1;
+        res.sales.push({ time: items[0].s, min: minutes(items[0].s), oz, item, size, qty, who: desc });
+      } else {
+        res.pours.push({ time: items[0].s, min: minutes(items[0].s), oz, beer: name, tap: desc });
+      }
+    }
+    if (!res.date) res.warnings.push('Could not find the report date.');
+    const sum = a => Math.round(a.reduce((s, r) => s + r.oz, 0) * 100) / 100;
+    res.pouredOz = sum(res.pours); res.soldOz = sum(res.sales);
+    if (res.dayTotal) {
+      if (Math.abs(res.pouredOz - res.dayTotal.poured) > 0.05) res.warnings.push(`Poured lines add to ${res.pouredOz} oz but the report total is ${res.dayTotal.poured} oz.`);
+      if (Math.abs(res.soldOz - res.dayTotal.sold) > 0.05) res.warnings.push(`Sold lines add to ${res.soldOz} oz but the report total is ${res.dayTotal.sold} oz.`);
+    } else res.warnings.push('Could not find the Day Total line.');
+    if (res.slippage == null) res.warnings.push('Could not find the Slippage Total.');
+    return res;
+  }
+
+  // Report header has no year: pick the year that puts the date closest to today, not in the future
+  function inferDate(mon, day, today) {
+    let y = today.getFullYear();
+    const cand = new Date(Date.UTC(y, mon - 1, day));
+    if (cand.getTime() > today.getTime() + 2 * 86400000) y -= 1;
+    return `${y}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  // ── Name matching ─────────────────────────────────────────────
+  const STOP = new Set(['ipa', 'ale', 'lager', 'draught', 'the', 'a', 'extra', 'pale', 'beer', 'draft', 'and']);
+  function norm(s) {
+    return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+      .replace(/['’.]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  function tokens(s) { return norm(s).split(' ').filter(t => t && !STOP.has(t)); }
+  function bigrams(s) { const t = norm(s).replace(/ /g, ''); const b = []; for (let i = 0; i < t.length - 1; i++) b.push(t.slice(i, i + 2)); return b; }
+  function dice(a, b) {
+    const A = bigrams(a), B = bigrams(b); if (!A.length || !B.length) return 0;
+    const m = new Map(); B.forEach(x => m.set(x, (m.get(x) || 0) + 1));
+    let n = 0; A.forEach(x => { if (m.get(x) > 0) { n++; m.set(x, m.get(x) - 1); } });
+    return 2 * n / (A.length + B.length);
+  }
+  function contain(pos, tap) {
+    const P = tokens(pos), T = new Set(tokens(tap)); if (!P.length) return 0;
+    const hit = P.filter(t => T.has(t) || [...T].some(u => (u.length > 3 && t.length > 3) && (u.startsWith(t) || t.startsWith(u)))).length;
+    const back = [...T].filter(u => P.includes(u)).length / Math.max(1, T.size);
+    return 0.75 * hit / P.length + 0.25 * back;
+  }
+  function score(pos, tap) { return 0.6 * contain(pos, tap) + 0.4 * dice(pos, tap); }
+
+  // Timing: which tap pours right after this item's rings?
+  function timingGuess(sales, pours, before = 2, after = 8) {
+    const votes = new Map();
+    for (const s of sales) {
+      const seen = new Set();
+      for (const p of pours) {
+        const d = p.min - s.min;
+        if (d >= -before && d <= after && !seen.has(p.beer)) { seen.add(p.beer); votes.set(p.beer, (votes.get(p.beer) || 0) + 1); }
+      }
+    }
+    let best = null, n = 0;
+    votes.forEach((v, k) => { if (v > n) { n = v; best = k; } });
+    return best ? { beer: best, share: n / sales.length, hits: n, rings: sales.length } : null;
+  }
+
+  // reports: parsed reports; aliases: {posName: tapBeer | '__unmatched__'} remembered choices
+  // Returns {taps: [{beer, tap}], items: [{pos, beer, how, confidence, rings, oz}]}
+  function buildMatches(reports, aliases = {}, opts = {}) {
+    const mystery = (opts.mysteryName || 'mystery').toLowerCase();
+    const tapMap = new Map();
+    reports.forEach(r => r.pours.forEach(p => { if (!tapMap.has(p.beer)) tapMap.set(p.beer, new Set()); tapMap.get(p.beer).add(p.tap); }));
+    const taps = [...tapMap.entries()].map(([beer, s]) => ({ beer, tap: [...s].sort().join('/') }));
+    const posItems = new Map();
+    reports.forEach(r => r.sales.forEach(s => {
+      const e = posItems.get(s.item) || { pos: s.item, rings: 0, oz: 0, sales: [] };
+      e.rings += s.qty; e.oz += s.oz; e.sales.push({ ...s, date: r.date, pours: r.pours });
+      posItems.set(s.item, e);
+    }));
+    // pass 1: confident name matches, so timing can ignore pours those rings explain
+    const nameBest = new Map();
+    for (const e of posItems.values()) {
+      let best = null, bestS = 0, second = 0;
+      for (const t of taps) { const s = score(e.pos, t.beer); if (s > bestS) { second = bestS; bestS = s; best = t.beer; } else if (s > second) second = s; }
+      if (!e.pos.toLowerCase().includes(mystery) && bestS >= 0.62 && bestS - second >= 0.04) nameBest.set(e.pos, best);
+    }
+    const explained = new WeakSet();
+    reports.forEach(r => r.pours.forEach(p => {
+      if (r.sales.some(s => nameBest.get(s.item) === p.beer && p.min - s.min >= -2 && p.min - s.min <= 8)) explained.add(p);
+    }));
+    const items = [];
+    for (const e of posItems.values()) {
+      const isMystery = e.pos.toLowerCase().includes(mystery);
+      let best = null, bestS = 0, second = 0;
+      for (const t of taps) { const s = score(e.pos, t.beer); if (s > bestS) { second = bestS; bestS = s; best = t.beer; } else if (s > second) second = s; }
+      // timing per report so pours from other days don't vote
+      const tg = (() => {
+        const votes = new Map(); let rings = 0;
+        const byDate = new Map(); e.sales.forEach(s => { if (!byDate.has(s.date)) byDate.set(s.date, []); byDate.get(s.date).push(s); });
+        byDate.forEach(list => { const g = timingGuess(list, list[0].pours.filter(p => !explained.has(p))); rings += list.length; if (g) votes.set(g.beer, (votes.get(g.beer) || 0) + g.hits); });
+        let b = null, n = 0; votes.forEach((v, k) => { if (v > n) { n = v; b = k; } });
+        return b ? { beer: b, share: n / rings } : null;
+      })();
+      let row;
+      if (!isMystery && aliases[e.pos]) row = { beer: aliases[e.pos] === '__unmatched__' ? null : aliases[e.pos], how: 'saved', confidence: 'high' };
+      else if (isMystery) row = tg && tg.share >= 0.5 ? { beer: tg.beer, how: 'timing', confidence: tg.share >= 0.8 ? 'high' : 'check' } : { beer: null, how: 'none', confidence: 'check' };
+      else if (bestS >= 0.62 && bestS - second >= 0.04) row = { beer: best, how: 'name', confidence: 'high' };
+      else if (tg && tg.share >= 0.6) row = { beer: tg.beer, how: 'timing', confidence: 'check' };
+      else if (bestS >= 0.5) row = { beer: best, how: 'name', confidence: 'check' };
+      else row = { beer: null, how: 'none', confidence: 'check' };
+      items.push({ pos: e.pos, rings: e.rings, oz: Math.round(e.oz * 10) / 10, mystery: isMystery, ...row,
+        nameGuess: best, nameScore: Math.round(bestS * 100) / 100, timingGuess: tg && tg.beer, timingShare: tg ? Math.round(tg.share * 100) / 100 : 0 });
+    }
+    items.sort((a, b) => (a.confidence === 'check' ? 0 : 1) - (b.confidence === 'check' ? 0 : 1) || a.pos.localeCompare(b.pos));
+    return { taps, items };
+  }
+
+  const r2 = v => Math.round(v * 100) / 100;
+  // mapping: {posName: tapBeer|null}; returns {daily: rows, byTap: rows} for the dates in reports
+  function buildRows(reports, taps, mapping) {
+    const tapOf = new Map(taps.map(t => [t.beer, t.tap]));
+    const daily = [], byTap = [];
+    for (const r of reports) {
+      const P = new Map(), S = new Map(), Q = new Map(), U = new Map();
+      r.pours.forEach(p => P.set(p.beer, (P.get(p.beer) || 0) + p.oz));
+      r.sales.forEach(s => {
+        const b = mapping[s.item];
+        if (b) { S.set(b, (S.get(b) || 0) + s.oz); Q.set(b, (Q.get(b) || 0) + s.qty); }
+        else U.set(s.item, (U.get(s.item) || 0) + s.oz);
+      });
+      const poured = r.dayTotal ? r.dayTotal.poured : r.pouredOz, sold = r.dayTotal ? r.dayTotal.sold : r.soldOz;
+      daily.push({ date: r.date, poured_oz: r2(poured), sold_oz: r2(sold), variance_oz: r2(poured - sold), slippage_usd: r.slippage });
+      const beers = [...new Set([...P.keys(), ...S.keys()])].sort();
+      beers.forEach(b => {
+        const p = r2(P.get(b) || 0), s = r2(S.get(b) || 0);
+        byTap.push({ date: r.date, tap: tapOf.get(b) || '', beer: b, poured_oz: p, sold_oz: s, variance_oz: r2(p - s), pours_rung: Q.get(b) || 0 });
+      });
+      [...U.keys()].sort().forEach(i => { const s = Math.round(U.get(i) * 10) / 10; byTap.push({ date: r.date, tap: '', beer: 'Unmatched: ' + i, poured_oz: 0, sold_oz: s, variance_oz: -s, pours_rung: '' }); });
+    }
+    return { daily, byTap };
+  }
+
+  // ── CSV helpers ───────────────────────────────────────────────
+  function csvCell(v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function toCSV(cols, rows) { return [cols.join(','), ...rows.map(r => cols.map(c => csvCell(r[c])).join(','))].join('\n') + '\n'; }
+  function parseCSV(text) {
+    const rows = []; let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+      else if (c === '"') q = true;
+      else if (c === ',') { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    const [h, ...rest] = rows.filter(r => r.length > 1 || r[0]);
+    return h ? rest.map(r => Object.fromEntries(h.map((k, i) => [k, r[i] ?? '']))) : [];
+  }
+  // replace rows whose date appears in `fresh`, keep the rest, sort
+  function mergeByDate(existing, fresh, keyFn) {
+    const dates = new Set(fresh.map(r => r.date));
+    const kept = existing.filter(r => !dates.has(String(r.date).slice(0, 10)));
+    return [...kept, ...fresh].sort((a, b) => String(a.date).localeCompare(String(b.date)) || keyFn(a).localeCompare(keyFn(b)));
+  }
+
+  const api = { linesFromPages, parseReport, buildMatches, buildRows, toCSV, parseCSV, mergeByDate, score, inferDate,
+    DAILY_COLS: ['date', 'poured_oz', 'sold_oz', 'variance_oz', 'slippage_usd'],
+    TAP_COLS: ['date', 'tap', 'beer', 'poured_oz', 'sold_oz', 'variance_oz', 'pours_rung'] };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.VarianceCore = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
 <script>
 const STORAGE_KEY = 'brasstrap_v2';
-let selectedFiles = [];
+const ALIAS_KEY = 'brasstrap_aliases';
+const VERSION = document.querySelector('meta[name="uploader-version"]').content;
+document.getElementById('ver').textContent = VERSION;
 
+let selectedFiles = [];      // {file, name, dest, kind}
+let reports = [];            // parsed variance reports
+let matchInfo = null;        // {taps, items}
+let choices = {};            // pos -> beer | '' (unmatched)
+let showAllMatches = false;
+let conn = { ok: false, canPush: false, latestTag: null };
+
+// ── Settings ──────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }
 function saveSettings() {
-  const s = {
-    token: document.getElementById('gh-token').value,
-    repo:   document.getElementById('gh-repo').value,
-    folder: document.getElementById('gh-folder').value,
-    tag:    document.getElementById('gh-tag').value,
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-  const t = s.tag.trim();
-  document.getElementById('tag-display').textContent = t || '—';
-  document.getElementById('next-tag').textContent = nextTag(t) || '—';
-  document.getElementById('token-badge').innerHTML = s.token ? '<span class="saved-badge">SAVED</span>' : '';
+  store(STORAGE_KEY, { ...load(STORAGE_KEY, {}), token: $('gh-token').value, repo: $('gh-repo').value, folder: $('gh-folder').value, doTag: $('do-tag').checked });
+  refreshButton();
 }
-
 function loadSettings() {
+  const s = load(STORAGE_KEY, {});
+  if (s.token) $('gh-token').value = s.token;
+  if (s.repo) $('gh-repo').value = s.repo;
+  if (s.folder) $('gh-folder').value = s.folder;
+  if (s.doTag === false) $('do-tag').checked = false;
+}
+const repo = () => $('gh-repo').value.trim();
+const folder = () => $('gh-folder').value.trim().replace(/^\/|\/$/g, '') || 'data';
+const token = () => $('gh-token').value.trim();
+
+// ── GitHub API ────────────────────────────────────────────────────
+function headers(json = true) {
+  const h = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  if (token()) h['Authorization'] = `Bearer ${token()}`;
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+}
+const encPath = p => p.split('/').map(encodeURIComponent).join('/');
+async function gh(path, opts = {}) {
+  const r = await fetch(`https://api.github.com${path}`, { ...opts, headers: { ...headers(!!opts.body), ...(opts.headers || {}) } });
+  let data = null; try { data = await r.json(); } catch (e) {}
+  return { ok: r.ok, status: r.status, data, res: r };
+}
+function explain(status, data) {
+  const m = (data && data.message) || '';
+  if (status === 401) return 'GitHub rejected the token (it has probably expired or been revoked). Make a new one and paste it above.';
+  if (status === 403 && /rate limit/i.test(m)) return 'GitHub rate limit hit. Wait a few minutes and try again.';
+  if (status === 403) return 'The token can read but not write this repo. Give it the repo scope (or Contents: Read and write).';
+  if (status === 404) return 'Repo not found with this token. Check the repo name, or the token can\'t see it.';
+  if (status === 409) return 'GitHub reported a conflict (the file changed mid-upload). Upload again.';
+  if (status === 422) return m || 'GitHub rejected the request.';
+  return m || `HTTP ${status}`;
+}
+
+let checkTimer = null;
+function scheduleCheck() { clearTimeout(checkTimer); checkTimer = setTimeout(checkConnection, 600); }
+function setConn(state, html) { $('conn').className = 'conn ' + state; $('conn-msg').innerHTML = html; }
+async function checkConnection() {
+  conn = { ok: false, canPush: false, latestTag: null };
+  if (!token()) { setConn('', 'Enter your token to check the connection.'); refreshButton(); return; }
+  setConn('', 'Checking…');
   try {
-    const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    if(s.token)  document.getElementById('gh-token').value  = s.token;
-    if(s.repo)   document.getElementById('gh-repo').value   = s.repo;
-    if(s.folder) document.getElementById('gh-folder').value = s.folder;
-    if(s.tag)    document.getElementById('gh-tag').value    = s.tag;
-    saveSettings();
-  } catch(e) {}
+    const u = await gh('/user');
+    if (!u.ok) { setConn('bad', `<strong>Token not working.</strong> ${esc(explain(u.status, u.data))}`); refreshButton(); return; }
+    const exp = u.res.headers.get('github-authentication-token-expiration');
+    const r = await gh(`/repos/${encPath(repo())}`);
+    if (!r.ok) { setConn('bad', `<strong>Can't reach the repo.</strong> ${esc(explain(r.status, r.data))}`); refreshButton(); return; }
+    conn.ok = true;
+    conn.canPush = !r.data.permissions || !!r.data.permissions.push;
+    const t = await gh(`/repos/${encPath(repo())}/tags?per_page=100`);
+    if (t.ok && Array.isArray(t.data)) conn.latestTag = latestTag(t.data.map(x => x.name));
+    const hasIndex = await gh(`/repos/${encPath(repo())}/contents/index.html`);
+    let expTxt = '';
+    if (exp) {
+      const d = new Date(exp.replace(' UTC', 'Z').replace(' ', 'T'));
+      const days = Math.round((d - new Date()) / 86400000);
+      expTxt = days <= 14 ? ` Token expires in <strong>${days} day${days === 1 ? '' : 's'}</strong>; make a new one soon.` : ` Token good until ${d.toLocaleDateString()}.`;
+    }
+    const idxTxt = hasIndex.status === 404 ? ' <strong>No index.html in the repo, so the dashboard is down.</strong> Drop index.html below to restore it.' : '';
+    if (!conn.canPush) setConn('bad', `<strong>Read-only token.</strong> ${esc(explain(403))}`);
+    else setConn(idxTxt || /expires in/.test(expTxt) ? 'warn' : 'ok', `<strong>Connected</strong> as ${esc(u.data.login)} to ${esc(repo())}.${expTxt}${idxTxt}`);
+    $('tag-info').textContent = conn.latestTag ? `(latest ${conn.latestTag} → next ${nextTag(conn.latestTag)})` : '(next v1.0)';
+    checkForUpdate();
+  } catch (e) {
+    setConn('bad', `<strong>Couldn't reach GitHub.</strong> Check your internet connection. (${esc(e.message)})`);
+  }
+  refreshButton();
 }
-
-function nextTag(tag) {
-  const m = tag.match(/^(v?)(\d+)\.(\d+)$/);
-  return m ? `${m[1]}${m[2]}.${parseInt(m[3])+1}` : '';
+function latestTag(names) {
+  const parsed = names.map(n => ({ n, m: n.match(/^v?(\d+)\.(\d+)$/) })).filter(x => x.m);
+  parsed.sort((a, b) => (+b.m[1] - +a.m[1]) || (+b.m[2] - +a.m[2]));
+  return parsed.length ? parsed[0].n : null;
 }
+function nextTag(tag) { const m = (tag || '').match(/^(v?)(\d+)\.(\d+)$/); return m ? `${m[1]}${m[2]}.${+m[3] + 1}` : 'v1.0'; }
 
-// ── Drag & drop ───────────────────────────────────────────────────
-const dz = document.getElementById('drop-zone');
+// ── Self-update check ─────────────────────────────────────────────
+async function checkForUpdate() {
+  try {
+    const r = await gh(`/repos/${encPath(repo())}/contents/brasstap_uploader.html`, { headers: { 'Accept': 'application/vnd.github.raw+json' } }).catch(() => null);
+    let text = null;
+    if (r && r.res && r.res.ok) text = await r.res.clone().text().catch(() => null);
+    if (!text) { const raw = await fetch(`https://raw.githubusercontent.com/${repo()}/main/brasstap_uploader.html`, { cache: 'no-store' }); if (raw.ok) text = await raw.text(); }
+    const m = text && text.match(/name="uploader-version" content="([\d.]+)"/);
+    if (m && cmpVer(m[1], VERSION) > 0) { $('new-ver').textContent = m[1]; $('update-banner').style.display = 'block'; }
+  } catch (e) {}
+}
+function cmpVer(a, b) { const A = a.split('.').map(Number), B = b.split('.').map(Number); for (let i = 0; i < 3; i++) { if ((A[i] || 0) !== (B[i] || 0)) return (A[i] || 0) - (B[i] || 0); } return 0; }
+
+// ── Files ─────────────────────────────────────────────────────────
+const dz = $('drop-zone');
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
 dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
 dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
 
-function normalizeName(name) {
-  if(!name.endsWith('.html')) return name;
-  const lower = name.toLowerCase();
-  if(lower.includes('index')) return 'index.html';
-  if(lower.includes('uploader')) return 'brasstap_uploader.html';
-  return name;
+function routeHTML(name) {
+  const l = name.toLowerCase();
+  if (l === 'index.html' || /^index[ _-]?\(?\d*\)?\.html$/.test(l)) return 'index.html';
+  if (l.includes('uploader')) return 'brasstap_uploader.html';
+  return null;
 }
 
-function handleFiles(files) {
-  for(const f of files) {
-    if(!f.name.endsWith('.csv') && !f.name.endsWith('.html')) continue;
-    const normalName = normalizeName(f.name);
-    if(selectedFiles.find(x => x.name === normalName)) continue;
-    const normalized = new File([f], normalName, {type: f.type});
-    selectedFiles.push(normalized);
+async function handleFiles(files) {
+  const pdfs = [];
+  for (const f of files) {
+    const l = f.name.toLowerCase();
+    if (l.endsWith('.pdf')) { pdfs.push(f); continue; }
+    if (l.endsWith('.html')) {
+      const dest = routeHTML(f.name);
+      if (!dest) { alert(`"${f.name}" isn't index.html or the uploader, so it was skipped. Rename it if it should replace one of them.`); continue; }
+      if (dest === 'index.html') {
+        const txt = await f.text();
+        const title = (txt.match(/<title>([^<]*)<\/title>/i) || [])[1] || '';
+        if (!/brass tap/i.test(title) || !/dashboard/i.test(title)) {
+          if (!confirm(`"${f.name}" doesn't look like the Brass Tap dashboard (its title is "${title || 'blank'}").\n\nUploading it will replace the live dashboard page. Continue?`)) continue;
+        }
+      }
+      addFile(f, dest, dest, 'root');
+      continue;
+    }
+    if (l.endsWith('.csv')) addFile(f, f.name, `${folder()}/${f.name}`, 'data');
   }
+  if (pdfs.length) await readPDFs(pdfs);
   renderList();
 }
-
+function addFile(file, name, dest, kind) {
+  selectedFiles = selectedFiles.filter(x => x.dest !== dest);
+  selectedFiles.push({ file, name, dest, kind });
+}
+function removeFile(i) {
+  const f = selectedFiles[i];
+  if (f && f.kind === 'variance') { reports = []; matchInfo = null; $('variance-card').style.display = 'none'; selectedFiles = selectedFiles.filter(x => x.kind !== 'variance'); }
+  else selectedFiles.splice(i, 1);
+  renderList();
+}
 function renderList() {
-  document.getElementById('file-list').innerHTML = selectedFiles.map((f,i) => `
-    <div class="file-item">
-      <span class="fname">${f.name}</span>
-      <span class="status pending" id="st-${i}">ready</span>
-    </div>`).join('');
-  const hasToken = !!document.getElementById('gh-token').value;
-  document.getElementById('upload-btn').disabled = selectedFiles.length === 0 || !hasToken;
+  const box = $('file-list'); box.replaceChildren();
+  const shown = selectedFiles.filter(f => f.kind !== 'variance');
+  if (reports.length) shown.push({ name: 'Draft variance daily.csv + by tap.csv', dest: `${folder()}/ · from ${reports.length} PDF${reports.length > 1 ? 's' : ''}`, kind: 'variance' });
+  shown.forEach((f) => {
+    const i = f.kind === 'variance' ? selectedFiles.findIndex(x => x.kind === 'variance') : selectedFiles.indexOf(f);
+    const row = document.createElement('div'); row.className = 'file-item';
+    const n = document.createElement('span'); n.className = 'fname'; n.textContent = f.name;
+    const d = document.createElement('span'); d.className = 'dest'; d.textContent = '→ ' + (f.kind === 'root' ? 'repo root' : f.dest); n.append(d);
+    const right = document.createElement('span');
+    const st = document.createElement('span'); st.className = 'status pending'; st.dataset.dest = f.kind === 'variance' ? '__variance__' : f.dest; st.textContent = 'ready';
+    const x = document.createElement('button'); x.className = 'x-btn'; x.title = 'Remove'; x.textContent = '×';
+    x.onclick = () => { if (f.kind === 'variance') removeFile(selectedFiles.findIndex(s => s.kind === 'variance')); else removeFile(selectedFiles.indexOf(f)); };
+    right.append(st, x); row.append(n, right); box.append(row);
+  });
+  if (reports.length && !selectedFiles.some(x => x.kind === 'variance')) selectedFiles.push({ kind: 'variance', name: 'variance', dest: '__variance__' });
+  refreshButton();
+}
+function refreshButton() {
+  const btn = $('upload-btn'); let why = '';
+  const unresolved = reports.length && reports.some(r => r.warnings.some(w => /add to/.test(w)));
+  if (!selectedFiles.length) why = '';
+  else if (!token()) why = 'Add your GitHub token above to upload.';
+  else if (!conn.ok) why = 'Fix the GitHub connection above first.';
+  else if (!conn.canPush) why = 'The token can\'t write to this repo.';
+  else if (unresolved) why = 'A variance report didn\'t add up to its own total. Remove it or check the file.';
+  btn.disabled = !selectedFiles.length || !!why;
+  $('why').textContent = why;
+}
+function clearFiles() {
+  selectedFiles = []; reports = []; matchInfo = null;
+  $('variance-card').style.display = 'none';
+  $('file-list').replaceChildren(); $('prog-fill').style.width = '0%';
+  $('log-box').style.display = 'none'; $('log-box').replaceChildren();
+  refreshButton();
 }
 
-function clearFiles() {
-  selectedFiles = [];
-  document.getElementById('file-list').innerHTML = '';
-  document.getElementById('prog-fill').style.width = '0%';
-  document.getElementById('log-box').style.display = 'none';
-  document.getElementById('log-box').innerHTML = '';
-  document.getElementById('upload-btn').disabled = true;
+// ── Variance PDFs ─────────────────────────────────────────────────
+function pdfReady() {
+  if (window.pdfjsLib || window.pdfjsLoadError) return Promise.resolve();
+  return new Promise(r => window.addEventListener('pdfjs-ready', r, { once: true }));
+}
+async function readPDFs(files) {
+  await pdfReady();
+  if (!window.pdfjsLib) { alert('The PDF reader failed to load, so the variance PDFs can\'t be read right now. Check your connection and reload.'); return; }
+  for (const f of files) {
+    try {
+      const doc = await pdfjsLib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+      const pages = [];
+      for (let p = 1; p <= doc.numPages; p++) {
+        const tc = await (await doc.getPage(p)).getTextContent();
+        pages.push(tc.items.map(i => ({ s: i.str, x: i.transform[4], y: i.transform[5] })));
+      }
+      const rep = VarianceCore.parseReport(pages, { today: new Date() });
+      if (!rep.date || (!rep.pours.length && !rep.sales.length)) { alert(`"${f.name}" doesn't look like a Daily Variance Report, so it was skipped.`); continue; }
+      rep.file = f.name;
+      reports = reports.filter(r => r.date !== rep.date).concat(rep).sort((a, b) => a.date.localeCompare(b.date));
+    } catch (e) { alert(`Couldn't read "${f.name}": ${e.message}`); }
+  }
+  if (reports.length) buildReview();
+}
+function buildReview() {
+  const aliases = load(ALIAS_KEY, {});
+  matchInfo = VarianceCore.buildMatches(reports, aliases);
+  choices = {};
+  matchInfo.items.forEach(it => {
+    // only pre-pick when confident, or when pour timing agrees
+    const pre = it.confidence === 'high' || it.how === 'timing' || it.how === 'saved' ? it.beer : null;
+    choices[it.pos] = pre || '';
+  });
+  $('variance-card').style.display = 'block';
+  $('vr-count').textContent = `${reports.length} report${reports.length > 1 ? 's' : ''}`;
+  const days = $('vr-days'); days.replaceChildren();
+  reports.forEach(r => {
+    const tr = document.createElement('tr');
+    const bad = r.warnings.some(w => /add to/.test(w));
+    const cells = [r.label + ' ' + r.date.slice(0, 4), fmt(r.dayTotal ? r.dayTotal.poured : r.pouredOz) + ' oz', fmt(r.dayTotal ? r.dayTotal.sold : r.soldOz) + ' oz', r.slippage == null ? '—' : '$' + Math.abs(r.slippage).toFixed(2)];
+    cells.forEach((c, i) => { const td = document.createElement('td'); if (i) td.className = 'num'; td.textContent = c; tr.append(td); });
+    const td = document.createElement('td');
+    td.className = bad ? 'bad-t' : r.warnings.length ? 'warn-t' : 'ok-t';
+    td.textContent = bad ? '✗ ' + r.warnings.join(' ') : r.warnings.length ? '⚠ ' + r.warnings.join(' ') : '✓ ties to report total';
+    tr.append(td); days.append(tr);
+  });
+  renderMatches();
+}
+const fmt = v => (+v).toLocaleString('en-US', { maximumFractionDigits: 2 });
+function toggleAllMatches() { showAllMatches = !showAllMatches; $('vr-toggle').textContent = showAllMatches ? 'Show only ones to check' : 'Show all'; renderMatches(); }
+function renderMatches() {
+  const body = $('vr-matches'); body.replaceChildren();
+  const toCheck = matchInfo.items.filter(i => i.confidence !== 'high' || i.mystery);
+  $('vr-match-note').textContent = toCheck.length
+    ? `${matchInfo.items.length - toCheck.length} POS items matched their tap by name. Check the ${toCheck.length} below.`
+    : `All ${matchInfo.items.length} POS items matched their tap by name.`;
+  const list = showAllMatches ? matchInfo.items : toCheck;
+  const tapOpts = matchInfo.taps.slice().sort((a, b) => a.tap.localeCompare(b.tap, undefined, { numeric: true }));
+  list.forEach(it => {
+    const tr = document.createElement('tr');
+    const a = document.createElement('td'); a.textContent = it.pos;
+    if (it.confidence !== 'high') { const p = document.createElement('span'); p.className = 'pill check'; p.textContent = 'check'; a.append(p); }
+    if (it.mystery) { const p = document.createElement('span'); p.className = 'pill'; p.textContent = 'mystery'; a.append(p); }
+    const hint = document.createElement('span'); hint.className = 'hint';
+    hint.textContent = it.mystery ? (it.timingGuess ? `Pours follow these rings on ${it.timingGuess} ${Math.round(it.timingShare * 100)}% of the time` : 'No tap consistently pours right after these rings')
+      : it.how === 'saved' ? 'Your saved choice'
+      : it.confidence === 'high' ? 'Matched by name'
+      : [it.nameGuess && it.nameScore >= 0.4 ? `Closest name: ${it.nameGuess}` : '', it.timingGuess && it.timingShare >= 0.25 ? `Pours after rings: ${it.timingGuess} (${Math.round(it.timingShare * 100)}%)` : ''].filter(Boolean).join(' · ') || 'No tap carries a similar name';
+    a.append(hint);
+    const b = document.createElement('td'); b.className = 'num'; b.textContent = `${it.rings} · ${fmt(it.oz)} oz`;
+    const c = document.createElement('td');
+    const sel = document.createElement('select');
+    sel.append(new Option('— Unmatched (no tap) —', ''));
+    const sugg = [...new Set([it.timingGuess, it.nameGuess].filter(Boolean))];
+    if (sugg.length) { const og = document.createElement('optgroup'); og.label = 'Suggested'; sugg.forEach(s => { const t = tapOpts.find(x => x.beer === s); og.append(new Option(`${t ? t.tap + ' · ' : ''}${s}`, s)); }); sel.append(og); }
+    const og2 = document.createElement('optgroup'); og2.label = 'All taps';
+    tapOpts.forEach(t => og2.append(new Option(`${t.tap} · ${t.beer}`, t.beer))); sel.append(og2);
+    sel.value = choices[it.pos] || '';
+    sel.onchange = () => { choices[it.pos] = sel.value; if (!it.mystery) { const al = load(ALIAS_KEY, {}); al[it.pos] = sel.value || '__unmatched__'; store(ALIAS_KEY, al); } };
+    c.append(sel); tr.append(a, b, c); body.append(tr);
+  });
+}
+
+async function fetchRepoText(path) {
+  const r = await fetch(`https://api.github.com/repos/${encPath(repo())}/contents/${encPath(path)}`, { headers: { ...headers(false), 'Accept': 'application/vnd.github.raw+json' }, cache: 'no-store' });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(explain(r.status, null));
+  return r.text();
+}
+async function buildVarianceFiles() {
+  const mapping = {};
+  matchInfo.items.forEach(it => { mapping[it.pos] = choices[it.pos] || null; });
+  const fresh = VarianceCore.buildRows(reports, matchInfo.taps, mapping);
+  const dailyPath = `${folder()}/Draft variance daily.csv`, tapPath = `${folder()}/Draft variance by tap.csv`;
+  const [oldDaily, oldTaps] = await Promise.all([fetchRepoText(dailyPath), fetchRepoText(tapPath)]);
+  const daily = VarianceCore.mergeByDate(oldDaily ? VarianceCore.parseCSV(oldDaily) : [], fresh.daily, () => '');
+  const byTap = VarianceCore.mergeByDate(oldTaps ? VarianceCore.parseCSV(oldTaps) : [], fresh.byTap, r => String(r.beer));
+  return [
+    { name: 'Draft variance daily.csv', dest: dailyPath, text: VarianceCore.toCSV(VarianceCore.DAILY_COLS, daily), days: new Set(daily.map(r => r.date)).size },
+    { name: 'Draft variance by tap.csv', dest: tapPath, text: VarianceCore.toCSV(VarianceCore.TAP_COLS, byTap) },
+  ];
 }
 
 // ── Logging ───────────────────────────────────────────────────────
-function log(msg, type='') {
-  const box = document.getElementById('log-box');
-  box.style.display = 'block';
-  const t = new Date().toLocaleTimeString('en-US',{hour12:false});
-  box.innerHTML += `<div class="log-line"><span class="log-time">${t}</span><span class="log-msg ${type}">${msg}</span></div>`;
-  box.scrollTop = box.scrollHeight;
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function log(msg, type = '') {
+  const box = $('log-box'); box.style.display = 'block';
+  const line = document.createElement('div'); line.className = 'log-line';
+  const t = document.createElement('span'); t.className = 'log-time'; t.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+  const m = document.createElement('span'); m.className = 'log-msg ' + type; m.textContent = msg;
+  line.append(t, m); box.append(line); box.scrollTop = box.scrollHeight;
 }
-
-// ── GitHub API ────────────────────────────────────────────────────
-function headers() {
-  return {
-    'Authorization': `Bearer ${document.getElementById('gh-token').value.trim()}`,
-    'Accept': 'application/vnd.github.v3+json',
-    'Content-Type': 'application/json',
-    'X-GitHub-Api-Version': '2022-11-28',
-  };
-}
-
-async function getSHA(repo, path) {
-  try {
-    const enc = path.split('/').map(encodeURIComponent).join('/');
-    const r = await fetch(`https://api.github.com/repos/${repo}/contents/${enc}`, {headers: headers()});
-    if(r.status === 404) return null;
-    return (await r.json()).sha || null;
-  } catch(e) { return null; }
-}
-
-async function putFile(repo, path, b64, sha) {
-  const enc = path.split('/').map(encodeURIComponent).join('/');
-  const body = {
-    message: `Update ${path.split('/').pop()} — ${new Date().toISOString().slice(0,10)}`,
-    content: b64,
-    branch: 'main',
-  };
-  if(sha) body.sha = sha;
-  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${enc}`, {
-    method: 'PUT', headers: headers(), body: JSON.stringify(body),
-  });
-  if(!r.ok) { const e = await r.json(); throw new Error(e.message || `HTTP ${r.status}`); }
-  return r.json();
-}
-
-async function getCommitSHA(repo) {
-  const r = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/main`, {headers: headers()});
-  return (await r.json()).object.sha;
-}
-
-async function createRelease(repo, tag, sha) {
-  const tagRes = await fetch(`https://api.github.com/repos/${repo}/git/tags`, {
-    method: 'POST', headers: headers(),
-    body: JSON.stringify({tag, message: `Dashboard ${tag}`, object: sha, type: 'commit'}),
-  });
-  if(!tagRes.ok) throw new Error('Tag object failed');
-  const tagData = await tagRes.json();
-  await fetch(`https://api.github.com/repos/${repo}/git/refs`, {
-    method: 'POST', headers: headers(),
-    body: JSON.stringify({ref: `refs/tags/${tag}`, sha: tagData.sha}),
-  });
-  await fetch(`https://api.github.com/repos/${repo}/releases`, {
-    method: 'POST', headers: headers(),
-    body: JSON.stringify({tag_name: tag, name: `Dashboard ${tag}`, body: `Automated update ${new Date().toISOString().slice(0,10)}`, draft: false, prerelease: false}),
-  });
-}
+function setStatus(dest, cls, text) { document.querySelectorAll('.status').forEach(s => { if (s.dataset.dest === dest) { s.className = 'status ' + cls; s.textContent = text; } }); }
 
 // ── Upload ────────────────────────────────────────────────────────
+function b64FromBytes(bytes) { let s = ''; const CH = 0x8000; for (let i = 0; i < bytes.length; i += CH) s += String.fromCharCode.apply(null, bytes.subarray(i, i + CH)); return btoa(s); }
+async function putFile(path, b64, msg) {
+  const cur = await gh(`/repos/${encPath(repo())}/contents/${encPath(path)}?ref=main`);
+  if (!cur.ok && cur.status !== 404) throw new Error(explain(cur.status, cur.data));
+  const body = { message: msg, content: b64, branch: 'main' };
+  if (cur.ok && cur.data && cur.data.sha) body.sha = cur.data.sha;
+  let r = await gh(`/repos/${encPath(repo())}/contents/${encPath(path)}`, { method: 'PUT', body: JSON.stringify(body) });
+  if (r.status === 409 || (r.status === 422 && /sha/i.test((r.data && r.data.message) || ''))) {
+    const again = await gh(`/repos/${encPath(repo())}/contents/${encPath(path)}?ref=main`);
+    if (again.ok) body.sha = again.data.sha;
+    r = await gh(`/repos/${encPath(repo())}/contents/${encPath(path)}`, { method: 'PUT', body: JSON.stringify(body) });
+  }
+  if (!r.ok) throw new Error(explain(r.status, r.data));
+}
+async function createTag() {
+  const ref = await gh(`/repos/${encPath(repo())}/git/ref/heads/main`);
+  if (!ref.ok) throw new Error(explain(ref.status, ref.data));
+  const t = await gh(`/repos/${encPath(repo())}/tags?per_page=100`);
+  let tag = nextTag(t.ok && Array.isArray(t.data) ? latestTag(t.data.map(x => x.name)) : null);
+  const existing = new Set(t.ok && Array.isArray(t.data) ? t.data.map(x => x.name) : []);
+  while (existing.has(tag)) tag = nextTag(tag);
+  const rel = await gh(`/repos/${encPath(repo())}/releases`, { method: 'POST', body: JSON.stringify({ tag_name: tag, target_commitish: ref.data.object.sha, name: `Dashboard ${tag}`, body: `Automated update ${new Date().toISOString().slice(0, 10)}` }) });
+  if (!rel.ok) throw new Error(explain(rel.status, rel.data));
+  return tag;
+}
+
 async function startUpload() {
-  const token  = document.getElementById('gh-token').value.trim();
-  const repo   = document.getElementById('gh-repo').value.trim();
-  const folder = document.getElementById('gh-folder').value.trim().replace(/\/$/, '');
-  const curTag = document.getElementById('gh-tag').value.trim();
-  const nxt    = nextTag(curTag);
-
-  if(!token)  { alert('Please enter your GitHub Personal Access Token.'); return; }
-  if(!nxt)    { alert('Please set your current release tag (e.g. v1.15).'); return; }
-  if(!selectedFiles.length) { alert('No files selected.'); return; }
-
-  document.getElementById('upload-btn').disabled = true;
-  document.getElementById('clear-btn').disabled  = true;
-  document.getElementById('log-box').innerHTML = '';
-
-  log(`Uploading ${selectedFiles.length} file(s) to ${repo}`, 'info');
-  log(`Will create release tag: ${nxt}`, 'info');
-
-  let done = 0;
-  for(let i = 0; i < selectedFiles.length; i++) {
-    const f = selectedFiles[i];
-    const st = document.getElementById(`st-${i}`);
-    if(st) { st.className = 'status uploading'; st.textContent = 'uploading…'; }
-
-    // Route HTML to root, everything else to /data/
-    const isHTML = f.name.endsWith('.html');
-    const path = isHTML ? f.name : `${folder}/${f.name}`;
-
+  if ($('upload-btn').disabled) return;
+  $('upload-btn').disabled = true; $('clear-btn').disabled = true;
+  $('log-box').replaceChildren();
+  const stamp = new Date().toISOString().slice(0, 10);
+  const jobs = [];
+  for (const f of selectedFiles) {
+    if (f.kind === 'variance') continue;
+    jobs.push({ name: f.name, dest: f.dest, statusKey: f.dest, getB64: async () => b64FromBytes(new Uint8Array(await f.file.arrayBuffer())) });
+  }
+  if (reports.length) {
+    // remember every non-mystery choice, including ones left as suggested
+    const al = load(ALIAS_KEY, {});
+    matchInfo.items.forEach(it => { if (!it.mystery) al[it.pos] = choices[it.pos] || '__unmatched__'; });
+    store(ALIAS_KEY, al);
     try {
-      const b64 = await new Promise((res, rej) => {
-        const rd = new FileReader();
-        rd.onload = e => res(btoa(e.target.result));
-        rd.onerror = rej;
-        rd.readAsBinaryString(f);
-      });
-      const sha = await getSHA(repo, path);
-      await putFile(repo, path, b64, sha);
-      if(st) { st.className = 'status done'; st.textContent = '✓ done'; }
-      log(`✓ ${f.name}${isHTML ? ' → root' : ''}`, 'success');
-    } catch(e) {
-      if(st) { st.className = 'status error'; st.textContent = '✗ error'; }
-      log(`✗ ${f.name}: ${e.message}`, 'error');
+      log(`Reading the dashboard's current variance data to merge ${reports.length} report(s)…`, 'info');
+      const vf = await buildVarianceFiles();
+      vf.forEach(v => jobs.push({ name: v.name, dest: v.dest, statusKey: '__variance__', getB64: async () => b64FromBytes(new TextEncoder().encode(v.text)) }));
+      log(`Variance data now covers ${vf[0].days} day(s).`, 'info');
+    } catch (e) { log(`✗ Couldn't prepare variance data: ${e.message}`, 'error'); setStatus('__variance__', 'error', '✗ error'); }
+  }
+  // dashboard page last, so data is in place when it reloads
+  jobs.sort((a, b) => (a.dest === 'index.html') - (b.dest === 'index.html'));
+  log(`Uploading ${jobs.length} file(s) to ${repo()}`, 'info');
+  let done = 0, failed = 0;
+  for (const j of jobs) {
+    setStatus(j.statusKey, 'uploading', 'uploading…');
+    try {
+      await putFile(j.dest, await j.getB64(), `Update ${j.name} — ${stamp}`);
+      log(`✓ ${j.name} → ${j.dest.includes('/') ? j.dest.split('/')[0] + '/' : 'root'}`, 'success');
+      if (j.statusKey !== '__variance__' || j.name.includes('by tap')) setStatus(j.statusKey, 'done', '✓ done');
+    } catch (e) {
+      failed++; setStatus(j.statusKey, 'error', '✗ error');
+      log(`✗ ${j.name}: ${e.message}`, 'error');
+      if (/token|rejected/i.test(e.message)) { log('Stopping: fix the token and upload again.', 'error'); break; }
     }
-
-    done++;
-    document.getElementById('prog-fill').style.width = (done / selectedFiles.length * 80) + '%';
+    done++; $('prog-fill').style.width = (done / jobs.length * 90) + '%';
   }
-
-  // Create release tag
-  log(`Creating release tag ${nxt}…`, 'info');
-  try {
-    const sha = await getCommitSHA(repo);
-    await createRelease(repo, nxt, sha);
-    document.getElementById('prog-fill').style.width = '100%';
-    document.getElementById('gh-tag').value = nxt;
-    saveSettings();
-    log(`✓ Release tag ${nxt} created`, 'success');
-    log(`🎉 Done! Dashboard updates at bherrin7.github.io/brassstap-data/ in ~2 min`, 'success');
-  } catch(e) {
-    log(`✗ Tag failed: ${e.message}`, 'error');
+  if (!failed && $('do-tag').checked) {
+    try { const tag = await createTag(); log(`✓ Release ${tag} created`, 'success'); }
+    catch (e) { log(`⚠ Files are uploaded, but the release tag failed: ${e.message}`, 'warn'); }
   }
-
-  document.getElementById('upload-btn').disabled = false;
-  document.getElementById('clear-btn').disabled  = false;
+  $('prog-fill').style.width = '100%';
+  if (!failed) log(`Done. The dashboard picks this up at ${repo().split('/')[0].toLowerCase()}.github.io/${repo().split('/')[1]}/ within a couple of minutes.`, 'success');
+  else log(`${failed} file(s) failed. Fix the issue above and upload again; files that worked are already saved.`, 'warn');
+  if (jobs.some(j => j.dest === 'brasstap_uploader.html')) log('The updater itself was replaced. Reload this page to use the new version.', 'info');
+  $('clear-btn').disabled = false; refreshButton();
 }
 
 loadSettings();
+checkConnection();
 </script>
 </body>
 </html>
