@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="uploader-version" content="2.0.0">
+<meta name="uploader-version" content="2.1.0">
 <title>Brass Tap Marietta — Dashboard Updater</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -131,6 +131,8 @@ table.vr select{margin:0;padding:6px 8px;font-size:11px;}
 <!-- UPLOAD -->
 <div class="card">
   <div class="card-title">Upload</div>
+  <label class="check" style="margin-top:0"><input type="checkbox" id="partial" onchange="refreshButton()"> Add a shorter date range to the existing data</label>
+  <div class="token-note" id="partial-note" style="margin:6px 0 0 22px">Tick this when your Toast export only covers new days (for example Aug 9 to today). <strong>Sales by day</strong> is merged by date, and <strong>Day of week</strong> and <strong>Time of day</strong> totals are added on. Other Toast files are all-time totals, so export those with the full range.</div>
   <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
   <button class="btn" id="upload-btn" onclick="startUpload()" disabled>Upload to GitHub</button>
   <div class="why" id="why"></div>
@@ -439,7 +441,7 @@ function explain(status, data) {
   const m = (data && data.message) || '';
   if (status === 401) return 'GitHub rejected the token (it has probably expired or been revoked). Make a new one and paste it above.';
   if (status === 403 && /rate limit/i.test(m)) return 'GitHub rate limit hit. Wait a few minutes and try again.';
-  if (status === 403) return 'The token can read but not write this repo. Give it the repo scope (or Contents: Read and write).';
+  if (status === 403) return 'The token can read but not write this repo. Classic token: tick the repo box. Fine-grained token: add this repo and set Contents to Read and write.';
   if (status === 404) return 'Repo not found with this token. Check the repo name, or the token can\'t see it.';
   if (status === 409) return 'GitHub reported a conflict (the file changed mid-upload). Upload again.';
   if (status === 422) return m || 'GitHub rejected the request.';
@@ -461,6 +463,10 @@ async function checkConnection() {
     if (!r.ok) { setConn('bad', `<strong>Can't reach the repo.</strong> ${esc(explain(r.status, r.data))}`); refreshButton(); return; }
     conn.ok = true;
     conn.canPush = !r.data.permissions || !!r.data.permissions.push;
+    // classic tokens report their scopes; a token without repo/public_repo can read a public repo but not write
+    const scopes = u.res.headers.get('x-oauth-scopes');
+    conn.scopeProblem = scopes != null && !/(^|,\s*)(repo|public_repo)(\s*,|$)/.test(scopes);
+    if (conn.scopeProblem) conn.canPush = false;
     const t = await gh(`/repos/${encPath(repo())}/tags?per_page=100`);
     if (t.ok && Array.isArray(t.data)) conn.latestTag = latestTag(t.data.map(x => x.name));
     const hasIndex = await gh(`/repos/${encPath(repo())}/contents/index.html`);
@@ -471,7 +477,7 @@ async function checkConnection() {
       expTxt = days <= 14 ? ` Token expires in <strong>${days} day${days === 1 ? '' : 's'}</strong>; make a new one soon.` : ` Token good until ${d.toLocaleDateString()}.`;
     }
     const idxTxt = hasIndex.status === 404 ? ' <strong>No index.html in the repo, so the dashboard is down.</strong> Drop index.html below to restore it.' : '';
-    if (!conn.canPush) setConn('bad', `<strong>Read-only token.</strong> ${esc(explain(403))}`);
+    if (!conn.canPush) setConn('bad', `<strong>This token can't write to the repo.</strong> ${conn.scopeProblem ? 'It\'s a classic token without the <strong>repo</strong> box ticked. Make a new one with the link above.' : esc(explain(403))}`);
     else setConn(idxTxt || /expires in/.test(expTxt) ? 'warn' : 'ok', `<strong>Connected</strong> as ${esc(u.data.login)} to ${esc(repo())}.${expTxt}${idxTxt}`);
     $('tag-info').textContent = conn.latestTag ? `(latest ${conn.latestTag} → next ${nextTag(conn.latestTag)})` : '(next v1.0)';
     checkForUpdate();
@@ -572,6 +578,7 @@ function refreshButton() {
   else if (!conn.ok) why = 'Fix the GitHub connection above first.';
   else if (!conn.canPush) why = 'The token can\'t write to this repo.';
   else if (unresolved) why = 'A variance report didn\'t add up to its own total. Remove it or check the file.';
+  else if ($('partial').checked) why = partialProblem();
   btn.disabled = !selectedFiles.length || !!why;
   $('why').textContent = why;
 }
@@ -710,7 +717,10 @@ async function putFile(path, b64, msg) {
     if (again.ok) body.sha = again.data.sha;
     r = await gh(`/repos/${encPath(repo())}/contents/${encPath(path)}`, { method: 'PUT', body: JSON.stringify(body) });
   }
-  if (!r.ok) throw new Error(explain(r.status, r.data));
+  if (!r.ok) {
+    if (r.status === 404 || r.status === 403) { const e = new Error('GitHub won\'t let this token write to the repo. Classic token: make a new one with the repo box ticked. Fine-grained token: add this repo and set Contents to Read and write.'); e.stop = true; throw e; }
+    const e = new Error(explain(r.status, r.data)); if (r.status === 401) e.stop = true; throw e;
+  }
 }
 async function createTag() {
   const ref = await gh(`/repos/${encPath(repo())}/git/ref/heads/main`);
@@ -724,14 +734,73 @@ async function createTag() {
   return tag;
 }
 
+// ── Shorter date range: merge instead of replace ────────────────
+const DAILY = 'Sales by day.csv';
+const TOTALS = { 'Day of week (totals).csv': 'Day of week', 'Time of day (totals).csv': 'Hour of day' };
+const dataFiles = () => selectedFiles.filter(f => f.kind === 'data');
+function partialProblem() {
+  const names = dataFiles().map(f => f.name);
+  const other = names.filter(n => n !== DAILY && !TOTALS[n]);
+  if (other.length) return `With "shorter date range" ticked, only Sales by day, Day of week and Time of day can be added. Remove ${other.length === 1 ? '"' + other[0] + '"' : other.length + ' other files'} or untick the box.`;
+  if (names.some(n => TOTALS[n]) && !names.includes(DAILY)) return 'Include the Sales by day export for the same dates. It\'s how the uploader knows which days the totals cover.';
+  return '';
+}
+const num = v => { const x = parseFloat(String(v ?? '').replace(/[$,]/g, '')); return isNaN(x) ? null : x; };
+function fmtNum(x, like) { if (x == null) return ''; const dec = String(like ?? '').includes('.') ? Math.min(2, (String(like).split('.')[1] || '').length) : (Number.isInteger(x) ? 0 : 2); return x.toFixed(dec); }
+function csvOut(head, rows) { return VarianceCore.toCSV(head, rows); }
+async function readCSV(file) { const t = await file.text(); const rows = VarianceCore.parseCSV(t.replace(/^\uFEFF/, '')); const head = (t.replace(/^\uFEFF/, '').split(/\r?\n/)[0] || '').split(',').map(h => h.replace(/^"|"$/g, '')); return { head, rows }; }
+async function buildPartialJobs() {
+  const files = Object.fromEntries(dataFiles().map(f => [f.name, f]));
+  const dailyNew = await readCSV(files[DAILY].file);
+  const dKey = dailyNew.head[0];
+  const newDays = dailyNew.rows.filter(r => /^\d{8}$/.test(r[dKey]));
+  if (!newDays.length) throw new Error('The Sales by day file has no dates in it.');
+  const first = newDays.map(r => r[dKey]).sort()[0], last = newDays.map(r => r[dKey]).sort().pop();
+  const pretty = d => `${d.slice(4, 6)}/${d.slice(6)}/${d.slice(0, 4)}`;
+  const oldText = await fetchRepoText(`${folder()}/${DAILY}`);
+  if (oldText == null) throw new Error('There\'s no Sales by day in the repo yet, so upload the full range the first time.');
+  const oldRows = VarianceCore.parseCSV(oldText.replace(/^\uFEFF/, ''));
+  const oldDates = new Set(oldRows.map(r => r[dKey]));
+  const overlap = newDays.filter(r => oldDates.has(r[dKey])).length;
+  log(`Sales by day: new file covers ${pretty(first)}–${pretty(last)} (${newDays.length} days); ${overlap} of those days were already there and will be replaced.`, 'info');
+  const newSet = new Set(newDays.map(r => r[dKey]));
+  const merged = oldRows.filter(r => !newSet.has(r[dKey])).concat(newDays).sort((a, b) => String(a[dKey]).localeCompare(String(b[dKey])));
+  const jobs = [{ name: DAILY, dest: `${folder()}/${DAILY}`, statusKey: files[DAILY].dest, text: csvOut(dailyNew.head, merged) }];
+  const newNet = newDays.reduce((s, r) => s + (num(r['Net sales']) || 0), 0);
+  for (const [name, key] of Object.entries(TOTALS)) {
+    if (!files[name]) continue;
+    if (overlap) throw new Error(`${name} can't be added: ${overlap} of its days are already counted in the dashboard, so adding would count them twice. Export starting the day after ${pretty([...oldDates].filter(d => /^\d{8}$/.test(d)).sort().pop())}, or upload ${name} for the full range with the box unticked.`);
+    const add = await readCSV(files[name].file);
+    const addNet = add.rows.reduce((s, r) => s + (num(r['Net sales']) || 0), 0);
+    if (Math.abs(addNet - newNet) > Math.max(1, newNet * 0.002)) throw new Error(`${name} adds up to $${addNet.toFixed(2)}, but Sales by day for these dates is $${newNet.toFixed(2)}. They need to be exported for the same date range.`);
+    const cur = await fetchRepoText(`${folder()}/${name}`);
+    const curP = cur ? VarianceCore.parseCSV(cur.replace(/^\uFEFF/, '')) : [];
+    const head = add.head;
+    const byKey = new Map(curP.map(r => [String(r[key]), { ...r }]));
+    add.rows.forEach(r => {
+      const k = String(r[key]); const base = byKey.get(k);
+      if (!base) { byKey.set(k, { ...r }); return; }
+      head.forEach(h => { if (h === key) return; const a = num(base[h]), b = num(r[h]); if (a != null || b != null) base[h] = fmtNum((a || 0) + (b || 0), base[h] || r[h]); });
+    });
+    jobs.push({ name, dest: `${folder()}/${name}`, statusKey: files[name].dest, text: csvOut(head, [...byKey.values()]) });
+    log(`${name}: added $${addNet.toFixed(2)} for ${pretty(first)}–${pretty(last)} to the existing totals.`, 'info');
+  }
+  return jobs.map(j => ({ ...j, getB64: async () => b64FromBytes(new TextEncoder().encode(j.text)) }));
+}
+
 async function startUpload() {
   if ($('upload-btn').disabled) return;
   $('upload-btn').disabled = true; $('clear-btn').disabled = true;
   $('log-box').replaceChildren();
   const stamp = new Date().toISOString().slice(0, 10);
   const jobs = [];
+  const partial = $('partial').checked && dataFiles().length;
+  if (partial) {
+    try { jobs.push(...await buildPartialJobs()); }
+    catch (e) { log(`✗ ${e.message}`, 'error'); log('Nothing was uploaded.', 'warn'); $('clear-btn').disabled = false; refreshButton(); return; }
+  }
   for (const f of selectedFiles) {
-    if (f.kind === 'variance') continue;
+    if (f.kind === 'variance' || (partial && f.kind === 'data')) continue;
     jobs.push({ name: f.name, dest: f.dest, statusKey: f.dest, getB64: async () => b64FromBytes(new Uint8Array(await f.file.arrayBuffer())) });
   }
   if (reports.length) {
@@ -759,7 +828,7 @@ async function startUpload() {
     } catch (e) {
       failed++; setStatus(j.statusKey, 'error', '✗ error');
       log(`✗ ${j.name}: ${e.message}`, 'error');
-      if (/token|rejected/i.test(e.message)) { log('Stopping: fix the token and upload again.', 'error'); break; }
+      if (e.stop) { log('Stopped before the other files: fix the token above and upload again. Nothing else was changed.', 'error'); break; }
     }
     done++; $('prog-fill').style.width = (done / jobs.length * 90) + '%';
   }
