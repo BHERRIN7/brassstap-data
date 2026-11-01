@@ -1,19 +1,19 @@
 Discount,Count,Orders,Amount
-Kitchen Beer COMP,12,6,107.33
-LP Server,13,8,110.0
-Manager 100%,190,141,2218.49
+Discount % (Item),1833,879,6610.68
 Manager 100% (mgr),2,2,23.0
-Burgers/Fries/Beverage,3,3,10.5
+Employee 100% (mgr),2079,1672,25050.62
 LP Breakage,3,2,32.75
 2025 Marketing Promo,1,1,3.5
-Comp Item,5206,3836,52414.42
-LP Kitchen,16,15,197.0
-Employee 50% (mgr),2948,1489,13609.35
-Discount $ (Item),1323,787,4823.93
-Discount % (Item),1833,879,6610.68
-10% OFF,742,196,723.7
-Veterans Day,12,11,156.0
+LP Kitchen,16,15,197.00
 Pay It Forward,1,1,7.0
-LP Customer,2,2,10.0
-Employee 100% (mgr),2079,1672,25050.62
+LP Customer,2,2,10.00
+Comp Item,5206,3836,52414.42
+LP Server,13,8,110.00
+Kitchen Beer COMP,12,6,107.33
+10% OFF,742,196,723.70
+Discount $ (Item),1323,787,4823.93
+Employee 50% (mgr),2948,1489,13609.35
+Manager 100%,190,141,2218.49
 Total,14386,9051,106108.27
+Veterans Day,12,11,156.0
+Burgers/Fries/Beverage,3,3,10.5
