@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="uploader-version" content="2.3.0">
+<meta name="uploader-version" content="2.4.0">
 <title>Brass Tap Marietta — Dashboard Updater</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -292,7 +292,9 @@ table.vr select{margin:0;padding:6px 8px;font-size:11px;}
     const mystery = (opts.mysteryName || 'mystery').toLowerCase();
     const tapMap = new Map();
     reports.forEach(r => r.pours.forEach(p => { if (!tapMap.has(p.beer)) tapMap.set(p.beer, new Set()); tapMap.get(p.beer).add(p.tap); }));
-    const taps = [...tapMap.entries()].map(([beer, s]) => ({ beer, tap: [...s].sort().join('/') }));
+    const taps = [...tapMap.entries()].map(([beer, s]) => ({ beer, tap: [...s].sort().join('/'), poured: true }));
+    // taps seen in earlier reports, so a beer that rang but didn't pour today can still be picked
+    (opts.extraTaps || []).forEach(t => { if (t && t.beer && !tapMap.has(t.beer) && !String(t.beer).startsWith('Unmatched')) { tapMap.set(t.beer, new Set([t.tap])); taps.push({ beer: t.beer, tap: String(t.tap || ''), poured: false }); } });
     const posItems = new Map();
     reports.forEach(r => r.sales.forEach(s => {
       const e = posItems.get(s.item) || { pos: s.item, rings: 0, oz: 0, sales: [] };
@@ -327,7 +329,7 @@ table.vr select{margin:0;padding:6px 8px;font-size:11px;}
       if (!isMystery && aliases[e.pos]) row = { beer: aliases[e.pos] === '__unmatched__' ? null : aliases[e.pos], how: 'saved', confidence: 'high' };
       else if (isMystery) row = tg && tg.share >= 0.5 ? { beer: tg.beer, how: 'timing', confidence: tg.share >= 0.8 ? 'high' : 'check' } : { beer: null, how: 'none', confidence: 'check' };
       else if (bestS >= 0.62 && bestS - second >= 0.04) row = { beer: best, how: 'name', confidence: 'high' };
-      else if (tg && tg.share >= 0.6) row = { beer: tg.beer, how: 'timing', confidence: 'check' };
+      else if (tg && tg.share >= 0.6 && e.rings >= 3) row = { beer: tg.beer, how: 'timing', confidence: 'check' };
       else if (bestS >= 0.5) row = { beer: best, how: 'name', confidence: 'check' };
       else row = { beer: null, how: 'none', confidence: 'check' };
       items.push({ pos: e.pos, rings: e.rings, oz: Math.round(e.oz * 10) / 10, mystery: isMystery, ...row,
@@ -395,6 +397,7 @@ table.vr select{margin:0;padding:6px 8px;font-size:11px;}
 <script>
 const STORAGE_KEY = 'brasstrap_v2';
 const ALIAS_KEY = 'brasstrap_aliases';
+const TAPS_KEY = 'brasstrap_taps';     // every tap/beer seen, for the match dropdown
 const VERSION = document.querySelector('meta[name="uploader-version"]').content;
 document.getElementById('ver').textContent = VERSION;
 
@@ -543,6 +546,10 @@ function matchCSV(name) {
 }
 async function loadKnownNames() {
   try {
+    const t = await fetchRepoText(`${folder()}/Draft variance by tap.csv`);
+    if (t) rememberTaps(VarianceCore.parseCSV(t).filter(r => r.beer && Number(r.poured_oz) > 0).map(r => ({ beer: r.beer, tap: r.tap })));
+  } catch (e) {}
+  try {
     const r = await gh(`/repos/${encPath(repo())}/contents/${encPath(folder())}`);
     if (r.ok && Array.isArray(r.data)) r.data.forEach(f => { if (/\.csv$/i.test(f.name)) KNOWN_CSV.add(f.name); });
   } catch (e) {}
@@ -581,6 +588,12 @@ async function addFile(file, name, dest, kind, from = null, isNew = false) {
   selectedFiles = selectedFiles.filter(x => x.dest !== dest);
   selectedFiles.push({ file: copy, name, dest, kind, from, isNew });
 }
+function rememberTaps(list) {
+  const known = load(TAPS_KEY, {});
+  list.forEach(t => { if (t.beer && !String(t.beer).startsWith('Unmatched')) known[t.beer] = String(t.tap || known[t.beer] || ''); });
+  store(TAPS_KEY, known);
+}
+const knownTaps = () => Object.entries(load(TAPS_KEY, {})).map(([beer, tap]) => ({ beer, tap }));
 function removeFile(i) {
   const f = selectedFiles[i];
   if (f && f.kind === 'variance') { reports = []; matchInfo = null; $('variance-card').style.display = 'none'; selectedFiles = selectedFiles.filter(x => x.kind !== 'variance'); }
@@ -652,11 +665,11 @@ async function readPDFs(files) {
 }
 function buildReview() {
   const aliases = load(ALIAS_KEY, {});
-  matchInfo = VarianceCore.buildMatches(reports, aliases);
+  matchInfo = VarianceCore.buildMatches(reports, aliases, { extraTaps: knownTaps() });
   choices = {};
   matchInfo.items.forEach(it => {
     // only pre-pick when confident, or when pour timing agrees
-    const pre = it.confidence === 'high' || it.how === 'timing' || it.how === 'saved' ? it.beer : null;
+    const pre = it.confidence === 'high' || it.how === 'saved' || (it.how === 'timing' && it.mystery) ? it.beer : null;
     choices[it.pos] = pre || '';
   });
   $('variance-card').style.display = 'block';
@@ -700,9 +713,9 @@ function renderMatches() {
     const sel = document.createElement('select');
     sel.append(new Option('— Unmatched (no tap) —', ''));
     const sugg = [...new Set([it.timingGuess, it.nameGuess].filter(Boolean))];
-    if (sugg.length) { const og = document.createElement('optgroup'); og.label = 'Suggested'; sugg.forEach(s => { const t = tapOpts.find(x => x.beer === s); og.append(new Option(`${t ? t.tap + ' · ' : ''}${s}`, s)); }); sel.append(og); }
+    if (sugg.length) { const og = document.createElement('optgroup'); og.label = 'Suggested'; sugg.forEach(s => { const t = tapOpts.find(x => x.beer === s); og.append(new Option(`${t && t.tap ? t.tap + ' · ' : ''}${s}`, s)); }); sel.append(og); }
     const og2 = document.createElement('optgroup'); og2.label = 'All taps';
-    tapOpts.forEach(t => og2.append(new Option(`${t.tap} · ${t.beer}`, t.beer))); sel.append(og2);
+    tapOpts.forEach(t => og2.append(new Option(`${t.tap ? t.tap + ' · ' : ''}${t.beer}${t.poured ? '' : '  (didn\'t pour in these reports)'}`, t.beer))); sel.append(og2);
     sel.value = choices[it.pos] || '';
     sel.onchange = () => { choices[it.pos] = sel.value; if (!it.mystery) { const al = load(ALIAS_KEY, {}); al[it.pos] = sel.value || '__unmatched__'; store(ALIAS_KEY, al); } };
     c.append(sel); tr.append(a, b, c); body.append(tr);
@@ -908,6 +921,7 @@ async function startUpload() {
     const al = load(ALIAS_KEY, {});
     matchInfo.items.forEach(it => { if (!it.mystery) al[it.pos] = choices[it.pos] || '__unmatched__'; });
     store(ALIAS_KEY, al);
+    rememberTaps(matchInfo.taps.filter(t => t.poured));
     try {
       log(`Reading the dashboard's current variance data to merge ${reports.length} report(s)…`, 'info');
       const vf = await buildVarianceFiles();
