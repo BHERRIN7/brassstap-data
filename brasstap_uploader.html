@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="uploader-version" content="2.5.0">
+<meta name="uploader-version" content="2.5.1">
 <title>Brass Tap Marietta — Dashboard Updater</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -803,8 +803,16 @@ function renderMatches() {
   });
 }
 
+// Read files at main's exact latest commit, so a cached copy can never be used as the merge base
+let headSha = null;
+async function mainSha() {
+  const r = await fetch(`https://api.github.com/repos/${encPath(repo())}/git/ref/heads/main?t=${Date.now()}`, { headers: headers(false), cache: 'no-store' });
+  if (!r.ok) throw new Error(explain(r.status, null));
+  return (await r.json()).object.sha;
+}
 async function fetchRepoText(path) {
-  const r = await fetch(`https://api.github.com/repos/${encPath(repo())}/contents/${encPath(path)}`, { headers: { ...headers(false), 'Accept': 'application/vnd.github.raw+json' }, cache: 'no-store' });
+  if (!headSha) headSha = await mainSha();
+  const r = await fetch(`https://api.github.com/repos/${encPath(repo())}/contents/${encPath(path)}?ref=${headSha}`, { headers: { ...headers(false), 'Accept': 'application/vnd.github.raw+json' }, cache: 'no-store' });
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(explain(r.status, null));
   return r.text();
@@ -960,6 +968,7 @@ async function buildPartialJobs() {
   const overlap = newDays.filter(r => oldDates.has(r[dKey])).length;
   const totalsFiles = all.filter(f => f.name !== DAILY && !isVarianceFile(f.name));
   if (overlap && totalsFiles.length) throw new Error(`${overlap} of the days in your export (${pretty(first)}–${pretty(last)}) are already in the dashboard, so adding the other files would count them twice. Export starting ${pretty(String(+lastOld + 1).length === 8 ? nextDay(lastOld) : lastOld)}.`);
+  if (first > nextDay(lastOld)) throw new Error(`The dashboard's daily sales end ${pretty(lastOld)}, but this export starts ${pretty(first)}, so the days in between would be missing. Export starting ${pretty(nextDay(lastOld))}.`);
   log(`Adding ${pretty(first)}–${pretty(last)} (${newDays.length} days) to data through ${pretty(lastOld)}.`, 'info');
   const newSet = new Set(sorted);
   const merged = oldRows.filter(r => !newSet.has(r[dKey])).concat(newDays).sort((a, b) => String(a[dKey]).localeCompare(String(b[dKey])));
@@ -984,6 +993,7 @@ function nextDay(d) { const t = new Date(Date.UTC(+d.slice(0, 4), +d.slice(4, 6)
 
 async function startUpload() {
   if ($('upload-btn').disabled) return;
+  headSha = null;   // re-read the latest commit for every upload
   $('upload-btn').disabled = true; $('clear-btn').disabled = true;
   $('log-box').replaceChildren();
   const stamp = new Date().toISOString().slice(0, 10);
