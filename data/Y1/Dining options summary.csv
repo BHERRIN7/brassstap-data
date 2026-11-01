@@ -1,0 +1,12 @@
+Dining option,Orders,Net sales,Discount amount,Gross sales,Tax amount
+Carryout,2046,30190.89,14856.87,45047.76,1881.53
+Curbside Pickup,5,84.0,25.0,109.0,5.05
+Delivery - Bite Sqd,9,138.75,146.25,285.0,7.78
+Delivery - DoorDash,368,12690.13,0.0,12690.13,750.25
+Delivery - Uber Eats,68,2275.25,0.0,2275.25,142.82
+Dine In,36165,1555749.15,104210.73,1660102.38,116059.71
+DoorDash - Takeout,79,2311.38,0.0,2311.38,137.16
+Online Ordering,733,19776.48,269.7,20046.18,1187.18
+Uber Eats - Delivery,36,1321.89,0.0,1321.89,84.37
+Uber Eats - Takeout,28,740.98,0.0,740.98,44.48
+Total,39537,1625278.90,119508.55,1744929.95,120300.33

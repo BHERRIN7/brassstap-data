@@ -1,0 +1,9 @@
+{
+  "fiscalYearStart": "Jun 1",
+  "firstYear": "Y1 = Jun 1, 2024 – May 31, 2025",
+  "locked": [
+    "Y1",
+    "Y2"
+  ],
+  "note": "Locked years are never written by the uploader. Each year keeps its own Toast Sales Summary in data/Yn/; the files in data/ are the years added together."
+}

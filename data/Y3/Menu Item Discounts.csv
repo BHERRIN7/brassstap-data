@@ -1,0 +1,9 @@
+Discount,Count,Orders,Amount
+Manager 100%,1,1,16.5
+Comp Item,337,269,3071.48
+Employee 50% (mgr),213,142,1117.09
+Discount $ (Item),146,92,488.36
+Discount % (Item),268,129,741.94
+10% OFF,126,51,140.61
+Employee 100% (mgr),3,2,30
+Total,1094,686,5605.98
