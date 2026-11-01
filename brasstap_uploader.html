@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="uploader-version" content="2.4.0">
+<meta name="uploader-version" content="2.4.2">
 <title>Brass Tap Marietta — Dashboard Updater</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -716,8 +716,26 @@ function renderMatches() {
     if (sugg.length) { const og = document.createElement('optgroup'); og.label = 'Suggested'; sugg.forEach(s => { const t = tapOpts.find(x => x.beer === s); og.append(new Option(`${t && t.tap ? t.tap + ' · ' : ''}${s}`, s)); }); sel.append(og); }
     const og2 = document.createElement('optgroup'); og2.label = 'All taps';
     tapOpts.forEach(t => og2.append(new Option(`${t.tap ? t.tap + ' · ' : ''}${t.beer}${t.poured ? '' : '  (didn\'t pour in these reports)'}`, t.beer))); sel.append(og2);
+    // every tap number up to the highest seen (at least 60), so taps the meters never report can still be picked
+    const have = new Set(tapOpts.flatMap(t => String(t.tap).split('/')).map(x => parseInt(x, 10)).filter(n => !isNaN(n)));
+    const maxTap = Math.max(60, ...have);
+    const missing = []; for (let n = 1; n <= maxTap; n++) if (!have.has(n)) missing.push(String(n).padStart(2, '0'));
+    if (missing.length) { const og3 = document.createElement('optgroup'); og3.label = 'Taps not in the meter reports'; missing.forEach(n => og3.append(new Option(`${n} · (no meter readings)`, '__tap__:' + n))); sel.append(og3); }
+    sel.append(new Option('+ Add a tap that isn\'t listed…', '__add__'));
     sel.value = choices[it.pos] || '';
-    sel.onchange = () => { choices[it.pos] = sel.value; if (!it.mystery) { const al = load(ALIAS_KEY, {}); al[it.pos] = sel.value || '__unmatched__'; store(ALIAS_KEY, al); } };
+    sel.onchange = () => {
+      if (sel.value === '__add__' || sel.value.startsWith('__tap__:')) {
+        const n = sel.value.startsWith('__tap__:') ? sel.value.slice(8) : (prompt(`Which tap number is ${it.pos} on?`) || '').trim();
+        if (!n) { sel.value = choices[it.pos] || ''; return; }
+        const tap = /^\d$/.test(n) ? '0' + n : n;
+        const t = { beer: it.pos, tap, poured: false };
+        matchInfo.taps = matchInfo.taps.filter(x => x.beer !== it.pos).concat(t);
+        rememberTaps([t]);
+        choices[it.pos] = it.pos;
+        const al = load(ALIAS_KEY, {}); al[it.pos] = it.pos; store(ALIAS_KEY, al);
+        renderMatches(); return;
+      }
+      choices[it.pos] = sel.value; if (!it.mystery) { const al = load(ALIAS_KEY, {}); al[it.pos] = sel.value || '__unmatched__'; store(ALIAS_KEY, al); } };
     c.append(sel); tr.append(a, b, c); body.append(tr);
   });
 }
