@@ -1,11 +1,11 @@
 Dining option,Orders,Net sales,Discount amount,Gross sales,Tax amount
-Carryout,309,6605.39,847.78,7453.17,404.39
-DoorDash - Delivery,217,8125.2,0,8125.2,485.44
-DoorDash - Takeout,54,1795.8,0,1795.8,106.44
-Dine In,18084,827955.02,24424.43,852379.45,65620.85
+Carryout,312,6683.89,847.78,7531.67,410.30
+DoorDash - Delivery,221,8255.70,0,8255.70,493.27
+DoorDash - Takeout,56,1881.80,0,1881.80,111.60
+Dine In,18212,834716.35,24728.59,859444.94,66153.01
 Delivery - DoorDash,15,544.6,0,544.6,32.69
-Uber Eats - Takeout,23,657.13,0,657.13,38.77
+Uber Eats - Takeout,24,693.23,0,693.23,40.90
 Delivery - Uber Eats,14,410.6,0,410.6,22.38
-Online Ordering,267,7547.48,28,7575.48,453.35
-Uber Eats - Delivery,142,5611.36,0,5611.36,329.13
-Total,19125,859252.58,25300.21,884552.79,67493.44
+Online Ordering,270,7615.48,28,7643.48,457.43
+Uber Eats - Delivery,143,5640.76,0,5640.76,330.90
+Total,19267,866442.41,25604.37,892046.78,68052.48
